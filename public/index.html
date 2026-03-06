@@ -5,18 +5,18 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Verifying...</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700&family=Bitter:wght@500;700;800&display=swap" rel="stylesheet">
 <style>
 /* ========== RESET & BASE ========== */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 :root {
-  --bg: #0b0f1a;
-  --card: #141a2e;
-  --accent: #6c5ce7;
-  --accent2: #00cec9;
-  --text: #e2e8f0;
-  --muted: #64748b;
-  --white: #ffffff;
+  --bg: #1a1c17;
+  --card: #2a2d22;
+  --accent: #c8a44e;
+  --accent2: #5a7a3a;
+  --text: #e2e0d5;
+  --muted: #8a8772;
+  --white: #f5f3eb;
   --popup-bg: #ffffff;
   --popup-text: #1e293b;
   --popup-muted: #64748b;
@@ -46,11 +46,11 @@ body {
 #fake-site .nav {
   display: flex; align-items: center; justify-content: space-between;
   padding: 20px 48px;
-  background: rgba(11,15,26,0.95);
-  border-bottom: 1px solid rgba(108,92,231,0.2);
+  background: rgba(26,28,23,0.95);
+  border-bottom: 1px solid rgba(200,164,78,0.2);
 }
 #fake-site .nav .logo {
-  font-family: 'Space Grotesk', sans-serif;
+  font-family: 'Bitter', sans-serif;
   font-size: 24px; font-weight: 700; color: var(--white);
   letter-spacing: -0.5px;
 }
@@ -62,17 +62,17 @@ body {
 #fake-site .hero {
   display: flex; flex-direction: column; align-items: center;
   text-align: center; padding: 100px 24px 60px;
-  background: linear-gradient(180deg, var(--bg) 0%, #141a2e 100%);
+  background: linear-gradient(180deg, var(--bg) 0%, #2a2d22 100%);
 }
 #fake-site .hero h1 {
-  font-family: 'Space Grotesk', sans-serif;
+  font-family: 'Bitter', sans-serif;
   font-size: 56px; font-weight: 700; line-height: 1.1;
   max-width: 700px; color: var(--white);
   margin-bottom: 20px;
 }
 #fake-site .hero h1 em {
   font-style: normal;
-  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  background: linear-gradient(135deg, var(--accent), #d4b85c);
   -webkit-background-clip: text; -webkit-text-fill-color: transparent;
 }
 #fake-site .hero p {
@@ -80,9 +80,9 @@ body {
 }
 #fake-site .hero .cta {
   display: inline-block; padding: 14px 36px; border-radius: 10px;
-  background: linear-gradient(135deg, var(--accent), #8b5cf6);
-  color: var(--white); font-weight: 600; font-size: 16px;
-  text-decoration: none; box-shadow: 0 4px 24px rgba(108,92,231,0.4);
+  background: linear-gradient(135deg, var(--accent), #b8943e);
+  color: #1a1c17; font-weight: 600; font-size: 16px;
+  text-decoration: none; box-shadow: 0 4px 24px rgba(200,164,78,0.3);
 }
 #fake-site .features {
   display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px;
@@ -94,7 +94,7 @@ body {
 }
 #fake-site .feature-card .icon { font-size: 32px; margin-bottom: 16px; }
 #fake-site .feature-card h3 {
-  font-family: 'Space Grotesk', sans-serif;
+  font-family: 'Bitter', sans-serif;
   font-size: 20px; font-weight: 600; color: var(--white); margin-bottom: 10px;
 }
 #fake-site .feature-card p { font-size: 14px; color: var(--muted); line-height: 1.6; }
@@ -102,7 +102,7 @@ body {
   padding: 60px 48px; text-align: center;
 }
 #fake-site .testimonials h2 {
-  font-family: 'Space Grotesk', sans-serif;
+  font-family: 'Bitter', sans-serif;
   font-size: 36px; color: var(--white); margin-bottom: 40px;
 }
 #fake-site .testimonial-grid {
@@ -221,9 +221,9 @@ body {
 .popup-btn:hover { background: #f1f5f9; border-color: #cbd5e1; }
 .popup-btn:active { background: #e2e8f0; }
 .popup-btn-primary {
-  background: #6c5ce7; color: #fff; border-color: #6c5ce7;
+  background: #3b82f6; color: #fff; border-color: #3b82f6;
 }
-.popup-btn-primary:hover { background: #5b4cdb; border-color: #5b4cdb; }
+.popup-btn-primary:hover { background: #2563eb; border-color: #2563eb; }
 
 /* Checkboxes */
 .check-row {
@@ -233,7 +233,7 @@ body {
 }
 .check-row:hover { background: #f8fafc; }
 .check-row input[type="checkbox"] {
-  margin-top: 2px; accent-color: #6c5ce7; width: 16px; height: 16px;
+  margin-top: 2px; accent-color: #3b82f6; width: 16px; height: 16px;
   flex-shrink: 0;
 }
 .check-row label { font-size: 13px; color: var(--popup-text); cursor: pointer; line-height: 1.4; }
@@ -242,12 +242,12 @@ body {
 .slider-container { padding: 8px 0; }
 .slider-label { font-size: 12px; color: var(--popup-muted); margin-bottom: 8px; }
 .slider-track {
-  width: 100%; accent-color: #6c5ce7;
+  width: 100%; accent-color: #3b82f6;
   height: 6px; cursor: pointer;
 }
 .slider-value {
   text-align: center; font-size: 28px; font-weight: 700;
-  color: var(--popup-text); margin: 8px 0; font-family: 'Space Grotesk', sans-serif;
+  color: var(--popup-text); margin: 8px 0; font-family: 'Bitter', sans-serif;
 }
 .slider-unit { font-size: 12px; color: var(--popup-muted); font-weight: 400; }
 
@@ -257,16 +257,16 @@ body {
   border-radius: 10px; font-size: 14px; font-family: inherit;
   color: var(--popup-text); outline: none; transition: border-color 0.15s;
 }
-.popup-input:focus { border-color: #6c5ce7; box-shadow: 0 0 0 3px rgba(108,92,231,0.1); }
+.popup-input:focus { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59,130,246,0.1); }
 
 /* Number input */
 .popup-number {
   width: 80px; padding: 10px 14px; border: 1px solid #e2e8f0;
   border-radius: 10px; font-size: 24px; font-weight: 700;
-  font-family: 'Space Grotesk', sans-serif;
+  font-family: 'Bitter', sans-serif;
   text-align: center; color: var(--popup-text); outline: none;
 }
-.popup-number:focus { border-color: #6c5ce7; box-shadow: 0 0 0 3px rgba(108,92,231,0.1); }
+.popup-number:focus { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59,130,246,0.1); }
 
 /* Captcha phrase display */
 .captcha-phrase {
@@ -299,8 +299,8 @@ body {
 }
 .emoji-cell:hover { background: #f1f5f9; }
 .emoji-cell.selected {
-  border-color: #6c5ce7; background: #ede9fe;
-  box-shadow: 0 0 0 2px rgba(108,92,231,0.2);
+  border-color: #3b82f6; background: #eff6ff;
+  box-shadow: 0 0 0 2px rgba(59,130,246,0.2);
 }
 
 /* Timer / scan bar */
@@ -309,7 +309,7 @@ body {
   overflow: hidden; margin: 16px 0;
 }
 .timer-bar-fill {
-  height: 100%; background: linear-gradient(90deg, #6c5ce7, #00cec9);
+  height: 100%; background: linear-gradient(90deg, #3b82f6, #60a5fa);
   border-radius: 8px; width: 0%;
   transition: width linear;
 }
@@ -334,7 +334,7 @@ body {
 }
 .status-verifying .spinner {
   width: 36px; height: 36px; border: 3px solid #e2e8f0;
-  border-top-color: #6c5ce7; border-radius: 50%;
+  border-top-color: #3b82f6; border-radius: 50%;
   animation: spin 0.8s linear infinite; margin-bottom: 14px;
 }
 @keyframes spin { to { transform: rotate(360deg); } }
@@ -388,71 +388,71 @@ body {
 <!-- ========== BLURRED BACKGROUND FAKE WEBSITE ========== -->
 <div id="fake-site">
   <div class="nav">
-    <div class="logo">synthe<span>tica</span>.ai</div>
+    <div class="logo">IRON<span>CREEK</span> OUTFITTERS</div>
     <div class="nav-links">
-      <a href="#">Features</a>
-      <a href="#">Pricing</a>
-      <a href="#">About</a>
-      <a href="#">Blog</a>
-      <a href="#">Contact</a>
+      <a href="#">Hunting</a>
+      <a href="#">Fishing</a>
+      <a href="#">Gear</a>
+      <a href="#">Guided Trips</a>
+      <a href="#">Pro Tips</a>
     </div>
   </div>
   <div class="hero">
-    <h1>The future of <em>intelligent automation</em> starts here</h1>
-    <p>Synthetica uses next-generation AI to streamline your workflow, eliminate busywork, and help your team focus on what matters. Trusted by 12,000+ teams worldwide.</p>
-    <a href="#" class="cta">Get Started Free →</a>
+    <h1>Premium <em>hunting &amp; fishing</em> gear for the serious outdoorsman</h1>
+    <p>From backcountry elk hunts to trophy bass fishing — we carry the brands and equipment trusted by guides and outfitters across North America. Free shipping on orders over $75.</p>
+    <a href="#" class="cta">Shop New Arrivals →</a>
   </div>
   <div class="features">
     <div class="feature-card">
-      <div class="icon">⚡</div>
-      <h3>Lightning Fast</h3>
-      <p>Process millions of data points in seconds. Our proprietary engine delivers results 10x faster than traditional methods.</p>
+      <div class="icon">🦌</div>
+      <h3>Hunting Gear</h3>
+      <p>Rifles, optics, blinds, calls, and camo from top brands like Sitka, Vortex, and Winchester. Everything for archery and rifle season.</p>
     </div>
     <div class="feature-card">
-      <div class="icon">🔮</div>
-      <h3>Predictive Insights</h3>
-      <p>Stay ahead of trends with AI-powered forecasting that learns and adapts to your unique business patterns.</p>
+      <div class="icon">🎣</div>
+      <h3>Fishing Tackle</h3>
+      <p>Rods, reels, lures, and fly-tying supplies. Freshwater and saltwater setups from Shimano, G. Loomis, and Simms.</p>
     </div>
     <div class="feature-card">
-      <div class="icon">🛡️</div>
-      <h3>Enterprise Security</h3>
-      <p>Bank-grade encryption, SOC2 compliance, and continuous monitoring keep your data safe around the clock.</p>
+      <div class="icon">🏕️</div>
+      <h3>Camp & Pack</h3>
+      <p>Tents, packs, sleeping bags, and cookware built for multi-day trips. Lightweight and built to last in any conditions.</p>
     </div>
     <div class="feature-card">
-      <div class="icon">🔗</div>
-      <h3>Seamless Integration</h3>
-      <p>Connect with 200+ tools your team already uses. Set up in minutes, not weeks.</p>
+      <div class="icon">🗺️</div>
+      <h3>Guided Trips</h3>
+      <p>Book guided hunts and fishing trips with experienced outfitters across Montana, Colorado, Alaska, and more.</p>
     </div>
     <div class="feature-card">
-      <div class="icon">📊</div>
-      <h3>Real-time Analytics</h3>
-      <p>Beautiful dashboards that tell the story behind your data. Share insights with one click.</p>
+      <div class="icon">🔧</div>
+      <h3>Gunsmithing</h3>
+      <p>Custom barrel work, trigger jobs, and scope mounting by our in-house gunsmiths. Drop-off or ship-in service available.</p>
     </div>
     <div class="feature-card">
-      <div class="icon">🤝</div>
-      <h3>Collaboration Built In</h3>
-      <p>Your whole team can work together in real-time. Comments, approvals, and handoffs — all in one place.</p>
+      <div class="icon">📋</div>
+      <h3>Licenses & Permits</h3>
+      <p>Check current season dates, tag availability, and license requirements for your state. We keep it updated weekly.</p>
     </div>
   </div>
   <div class="testimonials">
-    <h2>Loved by teams everywhere</h2>
+    <h2>Trusted by hunters & anglers since 2008</h2>
     <div class="testimonial-grid">
       <div class="testimonial">
-        <p>"Synthetica completely transformed how we handle data analysis. What used to take days now takes minutes."</p>
-        <div class="author">— Sarah Chen, VP of Engineering at Databricks</div>
+        <p>"Best selection of elk hunting gear I've found online. The guys actually know what they're talking about — they hunt too."</p>
+        <div class="author">— Dale Bruckner, Bozeman, MT</div>
       </div>
       <div class="testimonial">
-        <p>"The predictive insights alone have saved us over $2M this quarter. I can't imagine going back."</p>
-        <div class="author">— Marcus Rivera, COO at Frontier Health</div>
+        <p>"Ordered a new fly rod setup and had it on the water in three days. Great prices and the shipping was fast."</p>
+        <div class="author">— Mike Hensley, Bend, OR</div>
       </div>
       <div class="testimonial">
-        <p>"Finally, an AI tool that actually delivers on its promises. The onboarding was seamless."</p>
-        <div class="author">— Aisha Patel, Director of Ops at Lumina</div>
+        <p>"Did a guided mule deer hunt through them last fall. Top notch outfitter, saw deer every day. Already booked again."</p>
+        <div class="author">— Travis McCoy, Grand Junction, CO</div>
       </div>
     </div>
   </div>
   <div class="footer-site">
-    © 2025 Synthetica AI, Inc. All rights reserved. | Privacy Policy | Terms of Service
+    © 2025 Iron Creek Outfitters, LLC. All rights reserved. | Privacy Policy | Terms of Service | FFL Licensed Dealer
   </div>
 </div>
 
@@ -473,7 +473,7 @@ body {
 </div>
 
 <!-- ========== ATTEMPT COUNTER ========== -->
-<div id="avg-stat">Other users completed verification in an average of 2.3 attempts</div>
+<div id="avg-stat">Most users verify in a single attempt</div>
 <div id="attempt-counter">Verification attempt #1</div>
 
 <script>
@@ -485,18 +485,18 @@ let currentPopup = null;
 
 // Fake support emails
 const supportEmails = [
-  "support@verificati0n-help.com",
-  "human-support@realwebsite.biz",
-  "verify@n0t-a-scam.org",
-  "help@securecheckp0int.io",
-  "support@auth-verify.net",
-  "humans@definitelyreal.co",
-  "trust-team@safeentry.biz",
-  "verify-help@humann-check.com",
+  "support@ironcreek-verify.com",
+  "security@ironcreekoutfitters.net",
+  "noreply@verify-ironcreek.com",
+  "help@ironcreek-security.com",
+  "support@ic-verification.com",
+  "verify@ironcreek-support.net",
+  "security@icoutfitters-help.com",
+  "noreply@ironcreek-auth.com",
 ];
 
 // Browser tab title cycling
-const titles = ["Verifying...", "Almost verified!", "One more step...", "So close!", "Hang in there!"];
+const titles = ["Verifying...", "Verify to continue", "Security check", "One more step", "Please verify"];
 let titleIdx = 0;
 setInterval(() => {
   document.title = titles[titleIdx % titles.length];
@@ -546,13 +546,13 @@ async function fetchPopup() {
     // Fallback
     return {
       title: "Security Check",
-      body: "Just one more verification step. This should be quick!",
+      body: "Please complete this step to continue.",
       type: "opinion_buttons",
       dismiss_config: {
-        question: "Which of these best represents 'security'?",
-        buttons: ["A locked door", "A watchful eye", "A strong password"],
+        question: "Select the category that best describes this site:",
+        buttons: ["Technology", "Business", "Software"],
       },
-      failure_message: "Your selection didn't match our expected behavioral pattern. Let's try a different approach.",
+      failure_message: "Verification failed. Please try again.",
       success_first: false,
     };
   }
@@ -585,7 +585,7 @@ function showPopup(popupData) {
   }
 
   // Build popup HTML
-  const supportEmail = failCount > 10 ? `<div class="popup-footer">Need help? <a href="mailto:${supportEmails[failCount % supportEmails.length]}" style="color:#6c5ce7;text-decoration:none;">${supportEmails[failCount % supportEmails.length]}</a></div>` : "";
+  const supportEmail = failCount > 10 ? `<div class="popup-footer">Need help? <a href="mailto:${supportEmails[failCount % supportEmails.length]}" style="color:#3b82f6;text-decoration:none;">${supportEmails[failCount % supportEmails.length]}</a></div>` : "";
 
   let contentHTML = buildContent(popupData);
 
@@ -799,10 +799,10 @@ async function handleSubmission(data) {
     `;
     await sleep(1500);
     // Then reveal the catch
-    const reason = data.success_but || "However, an additional verification step is required due to elevated session entropy.";
+    const reason = data.success_but || "Verified. Additional verification required due to your network configuration.";
     content.innerHTML = `
       <div class="status-fail">
-        <div class="icon">⚠️</div>
+        <div class="icon">ℹ️</div>
         <p>${esc(reason)}</p>
       </div>
     `;
@@ -847,20 +847,24 @@ function showEncouragement() {
   const popup = document.getElementById("popup");
   popup.innerHTML = `
     <div class="popup-header">
-      <span class="shield">💪</span>
-      <span class="title">Don't Give Up!</span>
+      <span class="shield">🛡️</span>
+      <span class="title">Verification Troubleshooting</span>
       <button class="popup-close" id="close-btn-enc">✕</button>
       <div class="popup-close-tooltip" id="close-tooltip-enc">Verification must be completed to proceed</div>
     </div>
     <div class="popup-content">
       <div class="encouragement-body">
-        <div class="big-icon">🫂</div>
-        <p>We can see you're trying really hard, and we appreciate your patience. Most users complete verification within 3–4 checks.</p>
-        <p>You're currently at <strong>attempt #${failCount}</strong>.</p>
-        <p>If you continue to experience difficulties, consider trying from a different device or clearing your browser cache.</p>
-        <div class="stat">🕐 Average verification time for other users: 11 seconds</div>
+        <p style="color:#1e293b;font-size:14px;">You've had <strong>${failCount} unsuccessful verification attempts</strong> in this session.</p>
+        <p>This can be caused by browser extensions, VPN software, outdated browser versions, or strict privacy settings. You may want to try the following:</p>
+        <ul style="text-align:left;font-size:13px;color:#64748b;line-height:1.8;padding-left:20px;margin:8px 0;">
+          <li>Disable ad blockers or privacy extensions</li>
+          <li>Try a different browser</li>
+          <li>Clear your cookies and cache</li>
+          <li>Disable any VPN or proxy</li>
+        </ul>
+        <div class="stat">Average verification time: under 10 seconds</div>
       </div>
-      <button class="popup-btn popup-btn-primary" id="enc-continue" style="margin-top:16px;">Continue Verification</button>
+      <button class="popup-btn popup-btn-primary" id="enc-continue" style="margin-top:16px;">Try Again</button>
     </div>
   `;
 
