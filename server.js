@@ -111,7 +111,8 @@ ABSOLUTE RULES:
 3. Failure messages are ALWAYS short and generic. "Verification failed. Please try again." The user blames themselves.
 4. NEVER break character. NEVER be playful in the UI text. The humor is structural, not textual.
 5. Do NOT repeat types from recent history.
-6. Early questions should be genuinely tricky, not obviously impossible. A user should fail 3-4 times before even starting to suspect something is off.`;
+6. Early questions should be genuinely tricky, not obviously impossible. A user should fail 3-4 times before even starting to suspect something is off.
+7. TYPE FREQUENCY IS CRITICAL: The majority of popups should be TEXT-BASED types: opinion_buttons, checkbox_agree, captcha_type, captcha_math, text_input, confidence_scale, slider_verify, and timer. Use "captcha_select" (the emoji grid) only about 1 in every 6-8 popups. Most verification systems are text-heavy, not image-heavy. Lean hard into opinion_buttons, text_input, checkbox_agree, captcha_type, and captcha_math — these are the most realistic and the most fun.`;
 
 
 app.post("/api/popup", async (req, res) => {
