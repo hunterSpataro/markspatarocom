@@ -18,10 +18,15 @@ Think about the experience of a real Google reCAPTCHA: "Select all images with t
 
 JSON fields:
 - "title": short, boring, corporate. "Verify you are human", "Security Check", "One more step", "Confirm your identity", "Please verify to continue". No personality.
-- "body": 1-2 dry sentences. Real security interstitial tone: "This check is required to prevent automated access.", "Please complete this step to continue to the site." No exclamation marks, no encouragement.
+- "body": 1-2 dry sentences. Real security interstitial tone. Early (failCount 0-5): "This check is required to prevent automated access." / "Please complete this step to continue." Later (failCount 6-15): "We need to perform an additional check on this session." / "Your session requires further verification before proceeding." Late (failCount 16+): "Enhanced verification is required for this session." / "Your access request is being processed under additional review." The body should subtly communicate that the system is paying more attention to you specifically, without ever being dramatic about it.
 - "type": one of ["opinion_buttons", "checkbox_agree", "slider_verify", "captcha_type", "captcha_math", "captcha_select", "timer", "text_input", "confidence_scale"]
 - "dismiss_config": see below
-- "failure_message": Must sound like a real error. Short, terse, impersonal. Good: "Verification failed. Please try again." / "Your response did not match. Please try again." / "Incorrect selection. Please try again." / "Unable to verify your browser. This may be caused by browser extensions or privacy settings." NEVER use fake percentages, joke error codes, or encouraging language. Under 20 words. The user should blame themselves, not the system.
+- "failure_message": Must sound like a real error. Short, terse, impersonal. Under 20 words. But the TONE should subtly shift based on failCount:
+  * failCount 0-3: Completely neutral, standard. "Verification failed. Please try again." / "Your response did not match. Please try again." The system has zero opinion about you.
+  * failCount 4-8: The system starts noting your pattern without accusing. "Verification failed. Multiple attempts detected." / "Unable to verify. Your session has been flagged for review." / "Incorrect. Unusual response pattern noted." It's still professional but there's a hint that your record is being kept.
+  * failCount 9-15: The system is politely but clearly suspicious of YOU specifically. "Verification failed. This session has been flagged." / "Incorrect. Your responses are being logged for review." / "Unable to verify. Your activity does not match expected human behavior." / "Failed. Additional security measures have been applied to this session." You're not just failing — the system is starting to think you might be the problem.
+  * failCount 16+: The system treats you like a known threat but still in dry corporate language. "Verification failed. This session is under enhanced monitoring." / "Incorrect. Your access pattern has been escalated to manual review." / "Unable to verify. Continued failures may result in temporary access restriction." / "Failed. Your device fingerprint has been recorded." The subtext is: we're watching you specifically, and we're not sure you're human.
+  NEVER use fake percentages, joke error codes, or encouraging language. Keep it terse and corporate. The suspicion is in the CONTENT, not the tone — it should read like an automated system that has quietly decided you're suspicious.
 - "success_first": boolean. True roughly 1 in 7 times. Include "success_but" with a dry reason: "Verified. Additional verification required due to your network configuration."
 
 Types and dismiss_config — THE KEY IS IN THE QUESTION DESIGN:
@@ -99,19 +104,20 @@ Types and dismiss_config — THE KEY IS IN THE QUESTION DESIGN:
   * "How many browser tabs do you currently have open? (1-10)" (what if I have more than 10?)
   Failure: "Response outside expected parameters. Please try again."
 
-PROGRESSION:
-- failCount 0-3: Very standard stuff. Cookie consent, basic CAPTCHA, age check, "click all the traffic lights" style. The ambiguity is subtle — like a real reCAPTCHA that's just a little tricky.
-- failCount 4-10: The questions start having more edge cases. The emoji grids get trickier. The typed phrases get harder. But everything still looks totally standard.
-- failCount 11-20: The questions become quietly philosophical but are still dressed in corporate security language. "Select the item that is alive." "Enter the number of screens you can currently see." The user is starting to question reality but the interface is still perfectly boring.
-- failCount 20+: Peak subtle absurdity. The questions are genuinely unanswerable but still presented as if they're routine. "Move the slider to indicate how long you've been on this page." "Select all squares that are a color." "Type the word you're thinking of." The user should laugh or feel existential dread, but the UI is still a plain white modal with a shield icon.
+PROGRESSION — THIS IS CRITICAL, follow it closely:
+- failCount 0-2: COMPLETELY NORMAL. These should be indistinguishable from real verification. Cookie consent ("I accept cookies for site functionality"), standard CAPTCHA (type "xK9mP2"), basic age gate ("Confirm you are 18+"), "I am not a robot" checkbox, simple math ("What is 4 + 7?"), drag a slider to verify. There is ZERO ambiguity in these — they are real checks that fail for "technical" reasons ("Browser verification failed. Please try again."). The user thinks their browser is glitchy or they mistyped. Nothing weird yet.
+- failCount 3-5: Still mostly normal, but ONE thing about each question is slightly off. A CAPTCHA with one ambiguous character (was that an l or a 1?). A "select all traffic lights" where one tile is borderline. "Confirm your region" with options that are close ("North America" vs "United States" — which do I pick?). The user fails and blames themselves.
+- failCount 6-10: The questions are still dressed in standard security UI, but the ambiguity becomes real. "Which of these is a fruit?" with tomato as an option. "Select all animals" with a sponge emoji. "Enter today's date" with no format specified. The user pauses before answering. They're not sure anymore. But each question individually still looks like something a real site might ask.
+- failCount 11-18: The edge cases multiply. "How many objects are on your desk?", "Select all items that can hold water", "Rate the current temperature of your room (1-10)". The questions seem simple but become impossible to answer confidently. The user starts second-guessing everything. The UI is still perfectly boring.
+- failCount 18+: Quietly existential. "Select all squares that contain something", "Enter the last word you said out loud", "How many times have you blinked since this page loaded?", "Move the slider to indicate how certain you are that this is a real question." The questions are unanswerable but presented in the exact same dry corporate modal. The user either laughs or stares at the screen questioning their own humanity.
 
 ABSOLUTE RULES:
 1. The PRESENTATION is always cold, corporate, boring. Real Cloudflare energy.
 2. The QUESTIONS are where the magic lives — they should be subtly unanswerable, not obviously absurd.
-3. Failure messages are ALWAYS short and generic. "Verification failed. Please try again." The user blames themselves.
+3. Failure messages start generic and gradually become more suspicious of the user (see failure_message guidance above). Always terse and corporate — the suspicion is in the content, not the tone.
 4. NEVER break character. NEVER be playful in the UI text. The humor is structural, not textual.
 5. Do NOT repeat types from recent history.
-6. Early questions should be genuinely tricky, not obviously impossible. A user should fail 3-4 times before even starting to suspect something is off.
+6. The first 2-3 popups MUST be boringly normal with zero ambiguity. The user should genuinely think their browser is just having a bad day. Weirdness ramps up SLOWLY.
 7. TYPE FREQUENCY IS CRITICAL: Distribute types roughly evenly across these: opinion_buttons, checkbox_agree, captcha_type, text_input, confidence_scale, slider_verify, timer, and captcha_math. Do NOT favor captcha_math over others — math should appear no more than 1 in every 7-8 popups. Same for captcha_select (emoji grid) — only 1 in every 7-8. Every type should get roughly equal airtime. If the recent history shows a lot of one type, pick a DIFFERENT one.`;
 
 
