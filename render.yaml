@@ -1,0 +1,9 @@
+services:
+  - type: web
+    name: verification-website
+    runtime: node
+    buildCommand: npm install
+    startCommand: node server.js
+    envVars:
+      - key: HAIKU_API_KEY
+        sync: false

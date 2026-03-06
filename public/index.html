@@ -1,0 +1,897 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Verifying...</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+<style>
+/* ========== RESET & BASE ========== */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg: #0b0f1a;
+  --card: #141a2e;
+  --accent: #6c5ce7;
+  --accent2: #00cec9;
+  --text: #e2e8f0;
+  --muted: #64748b;
+  --white: #ffffff;
+  --popup-bg: #ffffff;
+  --popup-text: #1e293b;
+  --popup-muted: #64748b;
+  --success: #22c55e;
+  --fail: #f59e0b;
+  --fail-bg: #fef3c7;
+  --fail-text: #92400e;
+  --danger: #ef4444;
+}
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  overflow: hidden;
+  height: 100vh;
+  width: 100vw;
+}
+
+/* ========== BLURRED BACKGROUND WEBSITE ========== */
+#fake-site {
+  position: fixed; inset: 0; z-index: 0;
+  filter: blur(8px) brightness(0.9);
+  pointer-events: none; user-select: none;
+  overflow: hidden;
+  transition: filter 0.5s ease;
+}
+#fake-site .nav {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 20px 48px;
+  background: rgba(11,15,26,0.95);
+  border-bottom: 1px solid rgba(108,92,231,0.2);
+}
+#fake-site .nav .logo {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 24px; font-weight: 700; color: var(--white);
+  letter-spacing: -0.5px;
+}
+#fake-site .nav .logo span { color: var(--accent); }
+#fake-site .nav-links { display: flex; gap: 32px; }
+#fake-site .nav-links a {
+  color: var(--muted); text-decoration: none; font-size: 14px; font-weight: 500;
+}
+#fake-site .hero {
+  display: flex; flex-direction: column; align-items: center;
+  text-align: center; padding: 100px 24px 60px;
+  background: linear-gradient(180deg, var(--bg) 0%, #141a2e 100%);
+}
+#fake-site .hero h1 {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 56px; font-weight: 700; line-height: 1.1;
+  max-width: 700px; color: var(--white);
+  margin-bottom: 20px;
+}
+#fake-site .hero h1 em {
+  font-style: normal;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+}
+#fake-site .hero p {
+  font-size: 18px; color: var(--muted); max-width: 520px; margin-bottom: 36px; line-height: 1.6;
+}
+#fake-site .hero .cta {
+  display: inline-block; padding: 14px 36px; border-radius: 10px;
+  background: linear-gradient(135deg, var(--accent), #8b5cf6);
+  color: var(--white); font-weight: 600; font-size: 16px;
+  text-decoration: none; box-shadow: 0 4px 24px rgba(108,92,231,0.4);
+}
+#fake-site .features {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px;
+  padding: 60px 48px; max-width: 1100px; margin: 0 auto;
+}
+#fake-site .feature-card {
+  background: var(--card); border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 16px; padding: 32px;
+}
+#fake-site .feature-card .icon { font-size: 32px; margin-bottom: 16px; }
+#fake-site .feature-card h3 {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 20px; font-weight: 600; color: var(--white); margin-bottom: 10px;
+}
+#fake-site .feature-card p { font-size: 14px; color: var(--muted); line-height: 1.6; }
+#fake-site .testimonials {
+  padding: 60px 48px; text-align: center;
+}
+#fake-site .testimonials h2 {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 36px; color: var(--white); margin-bottom: 40px;
+}
+#fake-site .testimonial-grid {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px;
+  max-width: 1000px; margin: 0 auto;
+}
+#fake-site .testimonial {
+  background: var(--card); border-radius: 12px; padding: 28px;
+  border: 1px solid rgba(255,255,255,0.06); text-align: left;
+}
+#fake-site .testimonial p { font-size: 14px; color: var(--muted); line-height: 1.6; font-style: italic; margin-bottom: 14px; }
+#fake-site .testimonial .author { font-size: 13px; color: var(--accent); font-weight: 600; }
+#fake-site .footer-site {
+  padding: 40px 48px; text-align: center;
+  border-top: 1px solid rgba(255,255,255,0.06);
+  color: var(--muted); font-size: 13px; margin-top: 40px;
+}
+
+/* ========== VERIFICATION PROGRESS BAR ========== */
+#progress-bar-container {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  background: rgba(0,0,0,0.6); backdrop-filter: blur(4px);
+  padding: 10px 24px 10px;
+}
+#progress-bar-container .label {
+  font-size: 11px; color: var(--muted); margin-bottom: 4px;
+  display: flex; justify-content: space-between;
+}
+#progress-bar-container .bar-track {
+  height: 4px; background: rgba(255,255,255,0.1); border-radius: 4px; overflow: hidden;
+}
+#progress-bar-container .bar-fill {
+  height: 100%; border-radius: 4px;
+  background: linear-gradient(90deg, var(--accent), var(--accent2));
+  transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
+  width: 12%;
+}
+
+/* ========== POPUP OVERLAY ========== */
+#overlay {
+  position: fixed; inset: 0; z-index: 200;
+  background: rgba(0,0,0,0.5);
+  display: flex; align-items: center; justify-content: center;
+  backdrop-filter: blur(2px);
+  opacity: 0; transition: opacity 0.3s ease;
+}
+#overlay.visible { opacity: 1; }
+
+/* ========== POPUP MODAL ========== */
+#popup {
+  background: var(--popup-bg); color: var(--popup-text);
+  border-radius: 16px; width: 420px; max-width: 92vw;
+  box-shadow: 0 24px 80px rgba(0,0,0,0.5), 0 0 0 1px rgba(0,0,0,0.05);
+  transform: scale(0.95) translateY(8px);
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease;
+  opacity: 0; position: relative; overflow: hidden;
+  max-height: 90vh; overflow-y: auto;
+}
+#popup.visible { transform: scale(1) translateY(0); opacity: 1; }
+#popup.glitch {
+  animation: glitch 0.15s ease-in-out;
+}
+@keyframes glitch {
+  0% { transform: translate(0,0) scale(1); }
+  25% { transform: translate(-3px, 2px) scale(1.002); }
+  50% { transform: translate(2px, -1px) scale(0.998); }
+  75% { transform: translate(-1px, -2px) scale(1.001); }
+  100% { transform: translate(0,0) scale(1); }
+}
+
+/* Popup internal layout */
+.popup-header {
+  display: flex; align-items: center; gap: 10px;
+  padding: 20px 24px 0; position: relative;
+}
+.popup-header .shield { font-size: 20px; }
+.popup-header .title {
+  font-size: 16px; font-weight: 600; color: var(--popup-text); flex: 1;
+}
+.popup-close {
+  position: absolute; top: 16px; right: 16px;
+  width: 28px; height: 28px; border-radius: 8px;
+  border: none; background: #f1f5f9; color: #94a3b8;
+  font-size: 16px; cursor: pointer; display: flex;
+  align-items: center; justify-content: center;
+  transition: background 0.15s;
+}
+.popup-close:hover { background: #e2e8f0; }
+.popup-close-tooltip {
+  display: none; position: absolute; top: 44px; right: 0;
+  background: #1e293b; color: #fff; font-size: 11px;
+  padding: 6px 10px; border-radius: 6px; white-space: nowrap;
+  z-index: 10; box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+.popup-close:hover + .popup-close-tooltip,
+.popup-close-tooltip.show { display: block; }
+
+.popup-body {
+  padding: 12px 24px 0;
+  font-size: 14px; color: var(--popup-muted); line-height: 1.6;
+}
+.popup-content { padding: 16px 24px 20px; }
+.popup-footer {
+  padding: 0 24px 16px;
+  font-size: 11px; color: #94a3b8; text-align: center;
+}
+
+/* ========== POPUP INTERACTIVE ELEMENTS ========== */
+.popup-btn {
+  display: block; width: 100%; padding: 11px 16px;
+  background: #f8fafc; border: 1px solid #e2e8f0;
+  border-radius: 10px; font-size: 14px; color: var(--popup-text);
+  cursor: pointer; transition: all 0.15s; text-align: center;
+  font-family: inherit; margin-bottom: 8px;
+}
+.popup-btn:hover { background: #f1f5f9; border-color: #cbd5e1; }
+.popup-btn:active { background: #e2e8f0; }
+.popup-btn-primary {
+  background: #6c5ce7; color: #fff; border-color: #6c5ce7;
+}
+.popup-btn-primary:hover { background: #5b4cdb; border-color: #5b4cdb; }
+
+/* Checkboxes */
+.check-row {
+  display: flex; align-items: flex-start; gap: 10px;
+  padding: 10px 12px; border-radius: 8px; cursor: pointer;
+  transition: background 0.15s; margin-bottom: 4px;
+}
+.check-row:hover { background: #f8fafc; }
+.check-row input[type="checkbox"] {
+  margin-top: 2px; accent-color: #6c5ce7; width: 16px; height: 16px;
+  flex-shrink: 0;
+}
+.check-row label { font-size: 13px; color: var(--popup-text); cursor: pointer; line-height: 1.4; }
+
+/* Slider */
+.slider-container { padding: 8px 0; }
+.slider-label { font-size: 12px; color: var(--popup-muted); margin-bottom: 8px; }
+.slider-track {
+  width: 100%; accent-color: #6c5ce7;
+  height: 6px; cursor: pointer;
+}
+.slider-value {
+  text-align: center; font-size: 28px; font-weight: 700;
+  color: var(--popup-text); margin: 8px 0; font-family: 'Space Grotesk', sans-serif;
+}
+.slider-unit { font-size: 12px; color: var(--popup-muted); font-weight: 400; }
+
+/* Text input */
+.popup-input {
+  width: 100%; padding: 10px 14px; border: 1px solid #e2e8f0;
+  border-radius: 10px; font-size: 14px; font-family: inherit;
+  color: var(--popup-text); outline: none; transition: border-color 0.15s;
+}
+.popup-input:focus { border-color: #6c5ce7; box-shadow: 0 0 0 3px rgba(108,92,231,0.1); }
+
+/* Number input */
+.popup-number {
+  width: 80px; padding: 10px 14px; border: 1px solid #e2e8f0;
+  border-radius: 10px; font-size: 24px; font-weight: 700;
+  font-family: 'Space Grotesk', sans-serif;
+  text-align: center; color: var(--popup-text); outline: none;
+}
+.popup-number:focus { border-color: #6c5ce7; box-shadow: 0 0 0 3px rgba(108,92,231,0.1); }
+
+/* Captcha phrase display */
+.captcha-phrase {
+  background: #f8fafc; border: 1px solid #e2e8f0;
+  border-radius: 10px; padding: 14px 18px; margin-bottom: 12px;
+  font-family: 'Courier New', monospace; font-size: 18px;
+  letter-spacing: 2px; text-align: center; color: var(--popup-text);
+  position: relative; user-select: none;
+  /* Subtle wobble to make it look like a real captcha */
+  transform: skewX(-1deg) rotate(-0.5deg);
+}
+.captcha-phrase::before {
+  content: ''; position: absolute; inset: 0;
+  background: repeating-linear-gradient(
+    0deg, transparent, transparent 2px, rgba(0,0,0,0.02) 2px, rgba(0,0,0,0.02) 4px
+  );
+  border-radius: 10px; pointer-events: none;
+}
+
+/* Emoji grid */
+.emoji-grid {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;
+  margin-bottom: 12px;
+}
+.emoji-cell {
+  aspect-ratio: 1; display: flex; align-items: center; justify-content: center;
+  font-size: 28px; background: #f8fafc; border: 2px solid #e2e8f0;
+  border-radius: 10px; cursor: pointer; transition: all 0.15s;
+  user-select: none;
+}
+.emoji-cell:hover { background: #f1f5f9; }
+.emoji-cell.selected {
+  border-color: #6c5ce7; background: #ede9fe;
+  box-shadow: 0 0 0 2px rgba(108,92,231,0.2);
+}
+
+/* Timer / scan bar */
+.timer-bar-track {
+  height: 8px; background: #f1f5f9; border-radius: 8px;
+  overflow: hidden; margin: 16px 0;
+}
+.timer-bar-fill {
+  height: 100%; background: linear-gradient(90deg, #6c5ce7, #00cec9);
+  border-radius: 8px; width: 0%;
+  transition: width linear;
+}
+.timer-label {
+  font-size: 13px; color: var(--popup-muted); text-align: center;
+  margin-bottom: 4px;
+}
+.timer-dots::after {
+  content: ''; animation: dots 1.5s infinite;
+}
+@keyframes dots {
+  0% { content: ''; }
+  25% { content: '.'; }
+  50% { content: '..'; }
+  75% { content: '...'; }
+}
+
+/* ========== STATUS INDICATORS ========== */
+.status-verifying, .status-fail, .status-success {
+  display: flex; flex-direction: column; align-items: center;
+  padding: 24px; text-align: center;
+}
+.status-verifying .spinner {
+  width: 36px; height: 36px; border: 3px solid #e2e8f0;
+  border-top-color: #6c5ce7; border-radius: 50%;
+  animation: spin 0.8s linear infinite; margin-bottom: 14px;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.status-verifying p { font-size: 14px; color: var(--popup-muted); }
+
+.status-fail {
+  background: var(--fail-bg); border-radius: 0 0 16px 16px;
+}
+.status-fail .icon { font-size: 28px; margin-bottom: 8px; }
+.status-fail p { font-size: 13px; color: var(--fail-text); line-height: 1.5; }
+
+.status-success {
+  background: #dcfce7; border-radius: 0 0 16px 16px;
+}
+.status-success .icon { font-size: 28px; margin-bottom: 8px; }
+.status-success p { font-size: 13px; color: #166534; line-height: 1.5; }
+
+/* ========== ENCOURAGEMENT POPUP ========== */
+.encouragement-body {
+  text-align: center; padding: 12px 0;
+}
+.encouragement-body .big-icon { font-size: 40px; margin-bottom: 12px; }
+.encouragement-body p { font-size: 13px; color: var(--popup-muted); line-height: 1.6; margin-bottom: 8px; }
+.encouragement-body .stat {
+  font-size: 11px; color: #94a3b8; background: #f8fafc;
+  padding: 8px 12px; border-radius: 8px; margin-top: 8px;
+}
+
+/* ========== ATTEMPT COUNTER ========== */
+#attempt-counter {
+  position: fixed; bottom: 12px; left: 50%; transform: translateX(-50%);
+  z-index: 50; font-size: 11px; color: rgba(255,255,255,0.25);
+}
+#avg-stat {
+  position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%);
+  z-index: 50; font-size: 10px; color: rgba(255,255,255,0.2);
+  display: none;
+}
+
+/* ========== RESPONSIVE ========== */
+@media (max-width: 600px) {
+  #popup { width: 95vw; }
+  #fake-site .hero h1 { font-size: 32px; }
+  #fake-site .features { grid-template-columns: 1fr; }
+  #fake-site .testimonial-grid { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<!-- ========== BLURRED BACKGROUND FAKE WEBSITE ========== -->
+<div id="fake-site">
+  <div class="nav">
+    <div class="logo">synthe<span>tica</span>.ai</div>
+    <div class="nav-links">
+      <a href="#">Features</a>
+      <a href="#">Pricing</a>
+      <a href="#">About</a>
+      <a href="#">Blog</a>
+      <a href="#">Contact</a>
+    </div>
+  </div>
+  <div class="hero">
+    <h1>The future of <em>intelligent automation</em> starts here</h1>
+    <p>Synthetica uses next-generation AI to streamline your workflow, eliminate busywork, and help your team focus on what matters. Trusted by 12,000+ teams worldwide.</p>
+    <a href="#" class="cta">Get Started Free →</a>
+  </div>
+  <div class="features">
+    <div class="feature-card">
+      <div class="icon">⚡</div>
+      <h3>Lightning Fast</h3>
+      <p>Process millions of data points in seconds. Our proprietary engine delivers results 10x faster than traditional methods.</p>
+    </div>
+    <div class="feature-card">
+      <div class="icon">🔮</div>
+      <h3>Predictive Insights</h3>
+      <p>Stay ahead of trends with AI-powered forecasting that learns and adapts to your unique business patterns.</p>
+    </div>
+    <div class="feature-card">
+      <div class="icon">🛡️</div>
+      <h3>Enterprise Security</h3>
+      <p>Bank-grade encryption, SOC2 compliance, and continuous monitoring keep your data safe around the clock.</p>
+    </div>
+    <div class="feature-card">
+      <div class="icon">🔗</div>
+      <h3>Seamless Integration</h3>
+      <p>Connect with 200+ tools your team already uses. Set up in minutes, not weeks.</p>
+    </div>
+    <div class="feature-card">
+      <div class="icon">📊</div>
+      <h3>Real-time Analytics</h3>
+      <p>Beautiful dashboards that tell the story behind your data. Share insights with one click.</p>
+    </div>
+    <div class="feature-card">
+      <div class="icon">🤝</div>
+      <h3>Collaboration Built In</h3>
+      <p>Your whole team can work together in real-time. Comments, approvals, and handoffs — all in one place.</p>
+    </div>
+  </div>
+  <div class="testimonials">
+    <h2>Loved by teams everywhere</h2>
+    <div class="testimonial-grid">
+      <div class="testimonial">
+        <p>"Synthetica completely transformed how we handle data analysis. What used to take days now takes minutes."</p>
+        <div class="author">— Sarah Chen, VP of Engineering at Databricks</div>
+      </div>
+      <div class="testimonial">
+        <p>"The predictive insights alone have saved us over $2M this quarter. I can't imagine going back."</p>
+        <div class="author">— Marcus Rivera, COO at Frontier Health</div>
+      </div>
+      <div class="testimonial">
+        <p>"Finally, an AI tool that actually delivers on its promises. The onboarding was seamless."</p>
+        <div class="author">— Aisha Patel, Director of Ops at Lumina</div>
+      </div>
+    </div>
+  </div>
+  <div class="footer-site">
+    © 2025 Synthetica AI, Inc. All rights reserved. | Privacy Policy | Terms of Service
+  </div>
+</div>
+
+<!-- ========== PROGRESS BAR ========== -->
+<div id="progress-bar-container">
+  <div class="label">
+    <span>Verification Progress</span>
+    <span id="progress-pct">12%</span>
+  </div>
+  <div class="bar-track">
+    <div class="bar-fill" id="progress-fill"></div>
+  </div>
+</div>
+
+<!-- ========== POPUP OVERLAY ========== -->
+<div id="overlay">
+  <div id="popup"></div>
+</div>
+
+<!-- ========== ATTEMPT COUNTER ========== -->
+<div id="avg-stat">Other users completed verification in an average of 2.3 attempts</div>
+<div id="attempt-counter">Verification attempt #1</div>
+
+<script>
+// ========== STATE ==========
+let failCount = 0;
+let history = [];
+let progress = 12;
+let currentPopup = null;
+
+// Fake support emails
+const supportEmails = [
+  "support@verificati0n-help.com",
+  "human-support@realwebsite.biz",
+  "verify@n0t-a-scam.org",
+  "help@securecheckp0int.io",
+  "support@auth-verify.net",
+  "humans@definitelyreal.co",
+  "trust-team@safeentry.biz",
+  "verify-help@humann-check.com",
+];
+
+// Browser tab title cycling
+const titles = ["Verifying...", "Almost verified!", "One more step...", "So close!", "Hang in there!"];
+let titleIdx = 0;
+setInterval(() => {
+  document.title = titles[titleIdx % titles.length];
+  titleIdx++;
+}, 4000);
+
+// ========== PROGRESS BAR LOGIC ==========
+function updateProgress() {
+  // Progress hovers between 60-85%, occasionally drops back
+  // After 30+ failures, it climbs higher (but never completes)
+  const base = failCount < 5 ? 20 + failCount * 10
+    : failCount < 15 ? 60 + Math.random() * 15
+    : failCount < 30 ? 65 + Math.random() * 20
+    : 78 + Math.min(failCount - 30, 20) * 0.6 + Math.random() * 8;
+
+  // Occasional drops
+  const drop = Math.random() < 0.2 ? -8 - Math.random() * 10 : 0;
+  progress = Math.min(97, Math.max(12, base + drop));
+
+  const fill = document.getElementById("progress-fill");
+  const pct = document.getElementById("progress-pct");
+  fill.style.width = progress.toFixed(1) + "%";
+  pct.textContent = progress.toFixed(1) + "%";
+}
+
+// ========== BLUR DECREASE AFTER 30 FAILURES ==========
+function updateBlur() {
+  if (failCount > 30) {
+    const decrease = (failCount - 30) * 0.1;
+    const blur = Math.max(3, 8 - decrease);
+    document.getElementById("fake-site").style.filter = `blur(${blur}px) brightness(0.9)`;
+  }
+}
+
+// ========== FETCH POPUP FROM API ==========
+async function fetchPopup() {
+  try {
+    const res = await fetch("/api/popup", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ history: history.slice(-5), failCount }),
+    });
+    const data = await res.json();
+    return data;
+  } catch (err) {
+    console.error("Fetch error:", err);
+    // Fallback
+    return {
+      title: "Security Check",
+      body: "Just one more verification step. This should be quick!",
+      type: "opinion_buttons",
+      dismiss_config: {
+        question: "Which of these best represents 'security'?",
+        buttons: ["A locked door", "A watchful eye", "A strong password"],
+      },
+      failure_message: "Your selection didn't match our expected behavioral pattern. Let's try a different approach.",
+      success_first: false,
+    };
+  }
+}
+
+// ========== SHOW POPUP ==========
+function showPopup(popupData) {
+  currentPopup = popupData;
+  history.push(popupData.title);
+
+  const popup = document.getElementById("popup");
+  const overlay = document.getElementById("overlay");
+
+  // After 10+ failures, offset slightly
+  let offset = "";
+  if (failCount > 10) {
+    const x = (Math.random() - 0.5) * 60;
+    const y = (Math.random() - 0.5) * 40;
+    popup.style.marginLeft = x + "px";
+    popup.style.marginTop = y + "px";
+  } else {
+    popup.style.marginLeft = "0";
+    popup.style.marginTop = "0";
+  }
+
+  // Glitch effect after 15+
+  if (failCount > 15 && Math.random() < 0.3) {
+    popup.classList.add("glitch");
+    setTimeout(() => popup.classList.remove("glitch"), 150);
+  }
+
+  // Build popup HTML
+  const supportEmail = failCount > 10 ? `<div class="popup-footer">Need help? <a href="mailto:${supportEmails[failCount % supportEmails.length]}" style="color:#6c5ce7;text-decoration:none;">${supportEmails[failCount % supportEmails.length]}</a></div>` : "";
+
+  let contentHTML = buildContent(popupData);
+
+  popup.innerHTML = `
+    <div class="popup-header">
+      <span class="shield">🛡️</span>
+      <span class="title">${esc(popupData.title)}</span>
+      <button class="popup-close" id="close-btn">✕</button>
+      <div class="popup-close-tooltip" id="close-tooltip">Verification must be completed to proceed</div>
+    </div>
+    <div class="popup-body">${esc(popupData.body)}</div>
+    <div class="popup-content" id="popup-content">${contentHTML}</div>
+    ${supportEmail}
+  `;
+
+  // Animate in
+  popup.classList.remove("visible");
+  overlay.classList.remove("visible");
+  requestAnimationFrame(() => {
+    overlay.classList.add("visible");
+    requestAnimationFrame(() => popup.classList.add("visible"));
+  });
+
+  // Close button behavior
+  document.getElementById("close-btn").addEventListener("click", () => {
+    const tip = document.getElementById("close-tooltip");
+    tip.classList.add("show");
+    setTimeout(() => tip.classList.remove("show"), 2500);
+  });
+
+  // Bind interactions
+  bindInteractions(popupData);
+}
+
+// ========== BUILD CONTENT HTML ==========
+function buildContent(data) {
+  const cfg = data.dismiss_config || {};
+  switch (data.type) {
+    case "opinion_buttons":
+      return `
+        <p style="font-size:14px;color:#1e293b;margin-bottom:12px;font-weight:500;">${esc(cfg.question || "")}</p>
+        ${(cfg.buttons || []).map(b => `<button class="popup-btn action-btn" data-answer="${esc(b)}">${esc(b)}</button>`).join("")}
+      `;
+
+    case "checkbox_agree":
+      return `
+        ${(cfg.statements || []).map((s, i) => `
+          <div class="check-row">
+            <input type="checkbox" id="cb${i}" value="${i}">
+            <label for="cb${i}">${esc(s)}</label>
+          </div>
+        `).join("")}
+        <button class="popup-btn popup-btn-primary action-submit" style="margin-top:12px;">Submit</button>
+      `;
+
+    case "slider_verify":
+      return `
+        <div class="slider-container">
+          <div class="slider-label">${esc(cfg.label || "Adjust the slider")}</div>
+          <div class="slider-value"><span id="slider-val">50</span> <span class="slider-unit">${esc(cfg.unit || "units")}</span></div>
+          <input type="range" min="0" max="100" value="50" class="slider-track" id="slider-input">
+        </div>
+        <button class="popup-btn popup-btn-primary action-submit" style="margin-top:8px;">Calibrate</button>
+      `;
+
+    case "captcha_type":
+      return `
+        <div class="captcha-phrase">${esc(cfg.phrase || "verify me")}</div>
+        <input type="text" class="popup-input" id="captcha-input" placeholder="Type the phrase above exactly" autocomplete="off" spellcheck="false">
+        <button class="popup-btn popup-btn-primary action-submit" style="margin-top:12px;">Verify</button>
+      `;
+
+    case "captcha_math":
+      return `
+        <p style="font-size:15px;color:#1e293b;margin-bottom:12px;font-weight:500;text-align:center;">${esc(cfg.question || "")}</p>
+        <div style="display:flex;gap:8px;align-items:center;justify-content:center;">
+          <input type="text" class="popup-input" id="math-input" placeholder="Your answer" style="width:180px;text-align:center;" autocomplete="off">
+        </div>
+        <button class="popup-btn popup-btn-primary action-submit" style="margin-top:12px;">Submit Answer</button>
+      `;
+
+    case "captcha_select": {
+      const items = cfg.grid_items || ["🌻","🔥","🌊","🐱","☀️","🌙","🌶️","🧊","🌿"];
+      return `
+        <p style="font-size:13px;color:#1e293b;margin-bottom:10px;font-weight:500;">${esc(cfg.instruction || "Select all that apply")}</p>
+        <div class="emoji-grid">
+          ${items.map((e, i) => `<div class="emoji-cell" data-idx="${i}" data-emoji="${e}">${e}</div>`).join("")}
+        </div>
+        <button class="popup-btn popup-btn-primary action-submit">Verify Selection</button>
+      `;
+    }
+
+    case "timer": {
+      const secs = cfg.seconds || 8;
+      return `
+        <div class="timer-label"><span class="timer-dots">${esc(cfg.label || "Scanning")}</span></div>
+        <div class="timer-bar-track"><div class="timer-bar-fill" id="timer-fill"></div></div>
+        <p style="font-size:12px;color:#94a3b8;text-align:center;" id="timer-countdown">${secs} seconds remaining</p>
+      `;
+    }
+
+    case "text_input":
+      return `
+        <p style="font-size:14px;color:#1e293b;margin-bottom:10px;font-weight:500;">${esc(cfg.question || "")}</p>
+        <input type="text" class="popup-input" id="text-response" placeholder="Type your response..." autocomplete="off">
+        <button class="popup-btn popup-btn-primary action-submit" style="margin-top:12px;">Submit Response</button>
+      `;
+
+    case "confidence_scale":
+      return `
+        <p style="font-size:14px;color:#1e293b;margin-bottom:10px;font-weight:500;">${esc(cfg.statement || "")}</p>
+        <div style="display:flex;align-items:center;justify-content:center;gap:12px;margin:12px 0;">
+          <span style="font-size:12px;color:#94a3b8;">1 (Not at all)</span>
+          <input type="number" class="popup-number" id="confidence-input" min="1" max="10" value="5">
+          <span style="font-size:12px;color:#94a3b8;">10 (Certain)</span>
+        </div>
+        <button class="popup-btn popup-btn-primary action-submit" style="margin-top:8px;">Submit</button>
+      `;
+
+    default:
+      return `<button class="popup-btn popup-btn-primary action-submit">Continue</button>`;
+  }
+}
+
+// ========== BIND INTERACTIONS ==========
+function bindInteractions(data) {
+  const cfg = data.dismiss_config || {};
+
+  switch (data.type) {
+    case "opinion_buttons":
+      document.querySelectorAll(".action-btn").forEach(btn => {
+        btn.addEventListener("click", () => handleSubmission(data));
+      });
+      break;
+
+    case "checkbox_agree":
+    case "captcha_type":
+    case "captcha_math":
+    case "text_input":
+    case "confidence_scale":
+      document.querySelector(".action-submit")?.addEventListener("click", () => handleSubmission(data));
+      break;
+
+    case "slider_verify": {
+      const slider = document.getElementById("slider-input");
+      const val = document.getElementById("slider-val");
+      if (slider && val) {
+        slider.addEventListener("input", () => { val.textContent = slider.value; });
+      }
+      document.querySelector(".action-submit")?.addEventListener("click", () => handleSubmission(data));
+      break;
+    }
+
+    case "captcha_select":
+      document.querySelectorAll(".emoji-cell").forEach(cell => {
+        cell.addEventListener("click", () => cell.classList.toggle("selected"));
+      });
+      document.querySelector(".action-submit")?.addEventListener("click", () => handleSubmission(data));
+      break;
+
+    case "timer": {
+      const secs = cfg.seconds || 8;
+      const fill = document.getElementById("timer-fill");
+      const countdown = document.getElementById("timer-countdown");
+      if (fill) {
+        fill.style.transition = `width ${secs}s linear`;
+        requestAnimationFrame(() => { fill.style.width = "100%"; });
+      }
+      let remaining = secs;
+      const interval = setInterval(() => {
+        remaining--;
+        if (countdown) countdown.textContent = remaining > 0 ? `${remaining} seconds remaining` : "Analyzing results...";
+        if (remaining <= 0) {
+          clearInterval(interval);
+          setTimeout(() => handleSubmission(data), 800);
+        }
+      }, 1000);
+      break;
+    }
+  }
+}
+
+// ========== HANDLE SUBMISSION ==========
+async function handleSubmission(data) {
+  const content = document.getElementById("popup-content");
+  if (!content) return;
+
+  // Disable all buttons to prevent double-clicks
+  content.querySelectorAll("button, input").forEach(el => el.disabled = true);
+
+  // Show verifying state
+  const verifyLabels = ["Verifying...", "Analyzing...", "Processing...", "Checking...", "Measuring...", "Validating..."];
+  const label = verifyLabels[Math.floor(Math.random() * verifyLabels.length)];
+  content.innerHTML = `
+    <div class="status-verifying">
+      <div class="spinner"></div>
+      <p>${label}</p>
+    </div>
+  `;
+
+  // Wait 1-2 seconds for realism
+  await sleep(1200 + Math.random() * 800);
+
+  // Check if this is a "success_first" popup
+  if (data.success_first) {
+    content.innerHTML = `
+      <div class="status-success">
+        <div class="icon">✅</div>
+        <p><strong>Verified!</strong></p>
+      </div>
+    `;
+    await sleep(1500);
+    // Then reveal the catch
+    const reason = data.success_but || "However, an additional verification step is required due to elevated session entropy.";
+    content.innerHTML = `
+      <div class="status-fail">
+        <div class="icon">⚠️</div>
+        <p>${esc(reason)}</p>
+      </div>
+    `;
+    await sleep(2500);
+  } else {
+    // Show failure
+    content.innerHTML = `
+      <div class="status-fail">
+        <div class="icon">⚠️</div>
+        <p>${esc(data.failure_message || "That wasn't quite right. Let's try another approach.")}</p>
+      </div>
+    `;
+    await sleep(2500);
+  }
+
+  // Increment counter
+  failCount++;
+  document.getElementById("attempt-counter").textContent = `Verification attempt #${failCount + 1}`;
+
+  // Show average stat after 20 failures
+  if (failCount >= 20) {
+    document.getElementById("avg-stat").style.display = "block";
+  }
+
+  // Update progress bar
+  updateProgress();
+  updateBlur();
+
+  // Check if we should show an encouragement popup
+  if (failCount > 0 && failCount % 9 === 0) {
+    showEncouragement();
+    return;
+  }
+
+  // Fetch and show next popup
+  const next = await fetchPopup();
+  showPopup(next);
+}
+
+// ========== ENCOURAGEMENT POPUP ==========
+function showEncouragement() {
+  const popup = document.getElementById("popup");
+  popup.innerHTML = `
+    <div class="popup-header">
+      <span class="shield">💪</span>
+      <span class="title">Don't Give Up!</span>
+      <button class="popup-close" id="close-btn-enc">✕</button>
+      <div class="popup-close-tooltip" id="close-tooltip-enc">Verification must be completed to proceed</div>
+    </div>
+    <div class="popup-content">
+      <div class="encouragement-body">
+        <div class="big-icon">🫂</div>
+        <p>We can see you're trying really hard, and we appreciate your patience. Most users complete verification within 3–4 checks.</p>
+        <p>You're currently at <strong>attempt #${failCount}</strong>.</p>
+        <p>If you continue to experience difficulties, consider trying from a different device or clearing your browser cache.</p>
+        <div class="stat">🕐 Average verification time for other users: 11 seconds</div>
+      </div>
+      <button class="popup-btn popup-btn-primary" id="enc-continue" style="margin-top:16px;">Continue Verification</button>
+    </div>
+  `;
+
+  document.getElementById("close-btn-enc").addEventListener("click", () => {
+    const tip = document.getElementById("close-tooltip-enc");
+    tip.classList.add("show");
+    setTimeout(() => tip.classList.remove("show"), 2500);
+  });
+
+  document.getElementById("enc-continue").addEventListener("click", async () => {
+    const next = await fetchPopup();
+    showPopup(next);
+  });
+}
+
+// ========== HELPERS ==========
+function esc(str) {
+  const div = document.createElement("div");
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+function sleep(ms) {
+  return new Promise(r => setTimeout(r, ms));
+}
+
+// ========== INIT ==========
+(async function init() {
+  const popup = await fetchPopup();
+  showPopup(popup);
+})();
+</script>
+</body>
+</html>

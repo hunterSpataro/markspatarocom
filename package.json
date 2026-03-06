@@ -1,0 +1,12 @@
+{
+  "name": "verification-hell",
+  "version": "1.0.0",
+  "description": "A very real and legitimate website verification system",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2"
+  }
+}
