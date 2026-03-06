@@ -480,6 +480,7 @@ body {
 // ========== STATE ==========
 let failCount = 0;
 let history = [];
+let recentTypes = [];
 let progress = 12;
 let currentPopup = null;
 
@@ -537,7 +538,7 @@ async function fetchPopup() {
     const res = await fetch("/api/popup", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ history: history.slice(-5), failCount }),
+      body: JSON.stringify({ history: history.slice(-5), recentTypes: recentTypes.slice(-5), failCount }),
     });
     const data = await res.json();
     return data;
@@ -562,6 +563,7 @@ async function fetchPopup() {
 function showPopup(popupData) {
   currentPopup = popupData;
   history.push(popupData.title);
+  recentTypes.push(popupData.type);
 
   const popup = document.getElementById("popup");
   const overlay = document.getElementById("overlay");

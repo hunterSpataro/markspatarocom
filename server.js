@@ -112,13 +112,13 @@ ABSOLUTE RULES:
 4. NEVER break character. NEVER be playful in the UI text. The humor is structural, not textual.
 5. Do NOT repeat types from recent history.
 6. Early questions should be genuinely tricky, not obviously impossible. A user should fail 3-4 times before even starting to suspect something is off.
-7. TYPE FREQUENCY IS CRITICAL: The majority of popups should be TEXT-BASED types: opinion_buttons, checkbox_agree, captcha_type, captcha_math, text_input, confidence_scale, slider_verify, and timer. Use "captcha_select" (the emoji grid) only about 1 in every 6-8 popups. Most verification systems are text-heavy, not image-heavy. Lean hard into opinion_buttons, text_input, checkbox_agree, captcha_type, and captcha_math — these are the most realistic and the most fun.`;
+7. TYPE FREQUENCY IS CRITICAL: Distribute types roughly evenly across these: opinion_buttons, checkbox_agree, captcha_type, text_input, confidence_scale, slider_verify, timer, and captcha_math. Do NOT favor captcha_math over others — math should appear no more than 1 in every 7-8 popups. Same for captcha_select (emoji grid) — only 1 in every 7-8. Every type should get roughly equal airtime. If the recent history shows a lot of one type, pick a DIFFERENT one.`;
 
 
 app.post("/api/popup", async (req, res) => {
-  const { history = [], failCount = 0 } = req.body;
+  const { history = [], recentTypes = [], failCount = 0 } = req.body;
 
-  const userMessage = `The user has failed ${failCount} verification attempts so far. Recent popup titles were: ${history.length > 0 ? history.slice(-5).join(", ") : "none (this is the first popup)"}. Generate the next verification popup. Remember: return ONLY a raw JSON object, no markdown formatting.`;
+  const userMessage = `The user has failed ${failCount} verification attempts so far. Recent popup titles were: ${history.length > 0 ? history.slice(-5).join(", ") : "none (this is the first popup)"}. Recent popup TYPES used (DO NOT repeat these): ${recentTypes.length > 0 ? recentTypes.slice(-5).join(", ") : "none"}. Generate the next verification popup using a DIFFERENT type than the recent ones listed above. Remember: return ONLY a raw JSON object, no markdown formatting.`;
 
   try {
     const response = await fetch("https://api.anthropic.com/v1/messages", {
