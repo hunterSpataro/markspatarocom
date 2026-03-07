@@ -104,7 +104,8 @@ app.post("/api/popup", async (req, res) => {
     if (!response.ok) {
       const errText = await response.text();
       console.error("Anthropic API error:", response.status, errText);
-      return res.status(502).json({ error: "Verification service temporarily unavailable" });
+      // Throw so we land in the catch block with proper fallbacks
+      throw new Error(`Anthropic API ${response.status}: ${errText.slice(0, 200)}`);
     }
 
     const data = await response.json();
@@ -121,14 +122,23 @@ app.post("/api/popup", async (req, res) => {
 
     const popup = JSON.parse(cleaned);
 
+    // LOG the raw parsed response so we can diagnose issues
+    console.log("Haiku raw response:", JSON.stringify(popup, null, 2));
+
     // Validate and normalize the response
     const validTypes = ["opinion_buttons", "checkbox_agree", "slider_verify", "captcha_type", "captcha_math", "captcha_select", "timer", "text_input", "confidence_scale"];
     if (!popup.type || !validTypes.includes(popup.type)) {
       popup.type = "opinion_buttons";
     }
+
+    // Haiku might use different key names for the config object
     if (!popup.dismiss_config || typeof popup.dismiss_config !== "object") {
+      popup.dismiss_config = popup.config || popup.content || popup.options || popup.data || {};
+    }
+    if (typeof popup.dismiss_config !== "object" || Array.isArray(popup.dismiss_config)) {
       popup.dismiss_config = {};
     }
+
     if (!popup.failure_message) {
       popup.failure_message = "Verification failed. Please try again.";
     }
@@ -141,6 +151,15 @@ app.post("/api/popup", async (req, res) => {
 
     // Normalize common Haiku field name variations
     const cfg = popup.dismiss_config;
+
+    // CRITICAL: Haiku often puts config fields at the ROOT level instead of inside dismiss_config.
+    // Pull them down into cfg if cfg is missing them.
+    const rootKeys = Object.keys(popup).filter(k => !["type", "title", "body", "dismiss_config", "failure_message", "success_first", "success_but"].includes(k));
+    for (const key of rootKeys) {
+      if (!(key in cfg)) {
+        cfg[key] = popup[key];
+      }
+    }
 
     // opinion_buttons: needs "buttons" array
     if (popup.type === "opinion_buttons") {
@@ -179,18 +198,34 @@ app.post("/api/popup", async (req, res) => {
     if (popup.type === "captcha_type") {
       if (!cfg.phrase && cfg.text) { cfg.phrase = cfg.text; }
       if (!cfg.phrase && cfg.captcha) { cfg.phrase = cfg.captcha; }
+      if (!cfg.phrase && cfg.string) { cfg.phrase = cfg.string; }
+      // Last resort: find any short string that looks like a captcha phrase
+      if (!cfg.phrase) {
+        const anyStr = Object.values(cfg).find(v => typeof v === "string" && v.length >= 4 && v.length <= 30);
+        if (anyStr) cfg.phrase = anyStr;
+      }
     }
 
     // captcha_math: needs "question" string
     if (popup.type === "captcha_math") {
       if (!cfg.question && cfg.problem) { cfg.question = cfg.problem; }
       if (!cfg.question && cfg.prompt) { cfg.question = cfg.prompt; }
+      if (!cfg.question && cfg.expression) { cfg.question = cfg.expression; }
+      if (!cfg.question) {
+        const anyStr = Object.values(cfg).find(v => typeof v === "string" && v.length > 5);
+        if (anyStr) cfg.question = anyStr;
+      }
     }
 
     // text_input: needs "question" string
     if (popup.type === "text_input") {
       if (!cfg.question && cfg.prompt) { cfg.question = cfg.prompt; }
       if (!cfg.question && cfg.label) { cfg.question = cfg.label; }
+      if (!cfg.question && cfg.text) { cfg.question = cfg.text; }
+      if (!cfg.question) {
+        const anyStr = Object.values(cfg).find(v => typeof v === "string" && v.length > 5);
+        if (anyStr) cfg.question = anyStr;
+      }
     }
 
     // confidence_scale: needs "statement" string
@@ -198,6 +233,11 @@ app.post("/api/popup", async (req, res) => {
       if (!cfg.statement && cfg.question) { cfg.statement = cfg.question; }
       if (!cfg.statement && cfg.prompt) { cfg.statement = cfg.prompt; }
       if (!cfg.statement && cfg.label) { cfg.statement = cfg.label; }
+      if (!cfg.statement && cfg.text) { cfg.statement = cfg.text; }
+      if (!cfg.statement) {
+        const anyStr = Object.values(cfg).find(v => typeof v === "string" && v.length > 5);
+        if (anyStr) cfg.statement = anyStr;
+      }
     }
 
     // slider_verify: needs "label" string
@@ -205,11 +245,27 @@ app.post("/api/popup", async (req, res) => {
       if (!cfg.label && cfg.instruction) { cfg.label = cfg.instruction; }
       if (!cfg.label && cfg.question) { cfg.label = cfg.question; }
       if (!cfg.label && cfg.prompt) { cfg.label = cfg.prompt; }
+      if (!cfg.label && cfg.text) { cfg.label = cfg.text; }
+      if (!cfg.label) {
+        const anyStr = Object.values(cfg).find(v => typeof v === "string" && v.length > 5);
+        if (anyStr) cfg.label = anyStr;
+      }
       if (!cfg.label) { cfg.label = "Adjust the slider to the correct value"; }
     }
 
+    // timer: needs "label" string
+    if (popup.type === "timer") {
+      if (!cfg.label && cfg.message) { cfg.label = cfg.message; }
+      if (!cfg.label && cfg.text) { cfg.label = cfg.text; }
+      if (!cfg.label) {
+        const anyStr = Object.values(cfg).find(v => typeof v === "string" && v.length > 5);
+        if (anyStr) cfg.label = anyStr;
+      }
+      if (!cfg.label) { cfg.label = "Verifying your browser"; }
+    }
+
     // FINAL CHECK: if the config is STILL broken after normalization, swap to a working type
-    // This ensures the client NEVER gets an empty popup
+    console.log("After normalization — type:", popup.type, "cfg:", JSON.stringify(cfg));
     const isConfigValid = (
       (popup.type === "opinion_buttons" && Array.isArray(cfg.buttons) && cfg.buttons.length >= 2) ||
       (popup.type === "checkbox_agree" && Array.isArray(cfg.statements) && cfg.statements.length >= 2) ||
