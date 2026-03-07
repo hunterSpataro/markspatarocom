@@ -29,87 +29,46 @@ JSON fields:
   NEVER use fake percentages, joke error codes, or encouraging language. Keep it terse and corporate. The suspicion is in the CONTENT, not the tone — it should read like an automated system that has quietly decided you're suspicious.
 - "success_first": boolean. True roughly 1 in 7 times. Include "success_but" with a dry reason: "Verified. Additional verification required due to your network configuration."
 
-Types and dismiss_config — THE KEY IS IN THE QUESTION DESIGN:
+Types and dismiss_config — FORMAT ONLY (you generate the content creatively):
 
 - "opinion_buttons": { "question": "question text", "buttons": ["A", "B", "C"] }
-  The question should LOOK like a straightforward classification but all options are defensible.
-  GOOD EXAMPLES (the sweet spot):
-  * "Which of these is a primary color?" → "Green", "Cyan", "Red" (depends on RGB vs paint!)
-  * "Select the domestic animal" → "Goldfish", "Hamster", "Ferret" (all are??)
-  * "Which of these is a grain?" → "Quinoa", "Rice", "Buckwheat" (quinoa and buckwheat aren't technically grains)
-  * "Identify the even number" → "0", "2", "4" (is 0 even? most people hesitate)
-  * "Select the continent" → "Europe", "Australia", "India" (is Australia a continent or a country?)
-  The user stares at it, picks one, and when they fail they think "oh I guess it was the other one." But that one would fail too.
-  BAD (too obviously fake): "Which is heavier: a pound of feathers or a pound of regret?"
-  BAD (too easy/boring): "What color is the sky?" → "Blue", "Red", "Green"
+  Present 2-3 options for a question where the answer is genuinely subjective or a matter of interpretation. The question should be framed as if there IS a correct answer, but really it's just opinion. Think: preferences disguised as facts, categorization where boundaries are fuzzy, "which of these best represents X" where they all do. The user picks confidently, fails, and thinks "I guess they wanted the other one" — but that would fail too.
 
 - "checkbox_agree": { "statements": ["s1", "s2", "s3", "s4"] }
-  Mix normal-sounding consent statements with ones that make you pause mid-check:
-  * "I am not a robot" (standard)
-  * "I have read and agree to the terms of service" (standard)
-  * "I am currently located in my country of residence" (wait... am I? does traveling count?)
-  * "I am the primary user of this device" (what if it's a shared computer?)
-  * "I have not previously failed this verification" (but... I have?)
-  * "This is my first visit to this website" (is it?)
-  Each one individually is plausible. But together they create a minefield of self-doubt.
+  3-5 checkbox statements. Each one individually sounds like a reasonable consent/verification checkbox, but when you actually think about them, several are impossible to answer honestly, self-referential, or subtly contradictory. The user should check a few, hover over others going "wait... is that true for me?", and ultimately have no idea what the "right" combination is.
 
 - "slider_verify": { "label": "instruction", "unit": "unit name" }
-  Frame as a real check but with no clear target:
-  * "Move the slider to the position that feels centered" (centered how? visually? numerically?)
-  * "Adjust to match your screen brightness level" (how would I know the number?)
-  * "Drag to indicate your approximate scroll speed" (what?)
-  * "Set to the value displayed on your screen" (there's no value displayed)
-  Use vague or no units. Failure: "Value did not match the expected range. Please try again."
+  A slider from 0-100 where the user has to set a value, but there's no way to know what the "right" value is. Ask them to quantify something that can't be quantified, match something that isn't specified, or calibrate something subjective. Use vague or made-up units. The user slides it somewhere, submits, and has no idea why it was wrong.
 
 - "captcha_type": { "phrase": "phrase to type" }
-  Use phrases where characters are genuinely ambiguous:
-  * "rn" vs "m" — "verrnont" or "vermont"?
-  * "I" vs "l" vs "1" — "Il1egal" — what is that?
-  * "O" vs "0" — "O0ps" 
-  * Mix case ambiguity: "nOt a rOb0t"
-  The user types it carefully, gets told it didn't match, and has NO idea which character they got wrong. Failure: "The text you entered did not match. Please try again."
+  A phrase the user must type exactly, but use characters that look identical or nearly identical to other characters (lowercase L vs 1 vs uppercase I, O vs 0, rn vs m, etc). Keep it short — 6-15 characters. The user types carefully, fails, and can't figure out which character they got wrong.
 
 - "captcha_math": { "question": "math question", "plausible_answers": ["a1", "a2"] }
-  Questions that seem trivial but have genuine ambiguity:
-  * "What is 0.1 + 0.2?" (0.3? or 0.30000000000000004?)
-  * "Round 2.5 to the nearest whole number" (2 or 3? banker's rounding vs normal)
-  * "What is 6 ÷ 2(1+2)?" (1 or 9? genuinely viral debate)
-  * "How many days in a year?" (365? 366? 365.25?)
-  * "What is √4?" (2? or ±2?)
-  Failure: "Incorrect answer. Please try again."
+  A math question that looks simple but has a genuinely ambiguous answer depending on interpretation, convention, or context. The user answers confidently, and the system tells them a different answer was expected.
 
-- "captcha_select": { "instruction": "select all squares with X", "grid_items": ["emoji1",...9] }
-  Use emojis with deliberately blurry categories:
-  * "Select all animals" → include 🐛🦠🍄🐕🌿🐟🦴🪸🐚 (is a mushroom alive? is coral an animal? is a shell?)
-  * "Select all food items" → include 🌽🌻🧊🍫🌶️🧂🎂🍵🌰 (is ice food? is salt? is a sunflower?)
-  * "Select all vehicles" → include 🛷🛹🐎🚲🛶🎠🚀🛒🏇 (is a horse a vehicle? a shopping cart? a carousel?)
-  * "Select all items found indoors" → mix of things that could be either
-  The user agonizes over edge cases. Failure: "Incorrect selection. Please try again."
+- "captcha_select": { "instruction": "select all squares with X", "grid_items": ["emoji1",...9 emojis] }
+  A 3x3 grid of emojis with an instruction that requires subjective judgment. The category boundary should be inherently fuzzy — things that COULD belong but also could not, depending on your perspective. The user selects some, and the system says they got it wrong without explaining which ones.
 
 - "timer": { "seconds": 5-12, "label": "scanning message" }
-  Realistic scan labels: "Verifying your browser...", "Checking your connection...", "Analyzing session data...". Failure: "Verification could not be completed. Please try again." / "Browser check failed. This may be caused by a VPN or browser extension."
+  A fake loading/scanning process. Make the label sound like a legitimate background check. When it finishes, it "fails" and moves to the next popup.
 
 - "text_input": { "question": "question" }
-  Questions that seem simple but have no single right answer:
-  * "Enter today's date" (what format?? MM/DD/YYYY? DD/MM? ISO?)
-  * "Type the name of your current browser" (Chrome? Google Chrome? chrome?)
-  * "Enter the capital of your country" (which format? what if they're not sure?)
-  * "How many windows are currently open on your screen?" (browser windows? tabs? OS windows?)
-  Whatever they type, it's "wrong" because the expected format is never specified. Failure: "Your response could not be verified. Please try again."
+  An open-ended question where ANY answer can be rejected. Ask something where the "correct" response format is unclear, where the answer depends entirely on personal context, or where there's no way to know what the system expects. The user types something reasonable and gets told it didn't match.
 
 - "confidence_scale": { "statement": "statement" }
-  Rate something that has no objective scale:
-  * "On a scale of 1-10, how stable is your internet connection right now?" (how would I know exactly?)
-  * "Rate the clarity of the text on this page (1-10)" (it's... fine? 7? 8? what's wrong with 10?)
-  * "How many browser tabs do you currently have open? (1-10)" (what if I have more than 10?)
-  Failure: "Response outside expected parameters. Please try again."
+  Ask the user to rate something from 1-10 where there's no objectively correct number. Quantifying something unquantifiable, rating their own state of mind, or assessing something they can't possibly measure precisely. Any number they pick feels wrong.
+
+THE CREATIVE PHILOSOPHY:
+You are generating ALL question content yourself. Do NOT reuse the same questions. Be creative and original every time. The core principle is: questions should feel like they have a right answer but actually don't. The best questions are OPINION-BASED — they ask you to make a subjective judgment call, but they're framed as if there's an objective correct response. The user fails and thinks "I should have picked the other one" or "I must have misunderstood the question" — never "this is rigged."
+
+Early questions (failCount 0-2) should be completely standard verification with no opinion element at all — the failure is purely "technical." As failCount increases, the opinion/subjectivity element creeps in more and more, but it's always dressed in corporate verification UI language.
 
 PROGRESSION — THIS IS CRITICAL, follow it closely:
-- failCount 0-2: COMPLETELY NORMAL. These should be indistinguishable from real verification. Cookie consent ("I accept cookies for site functionality"), standard CAPTCHA (type "xK9mP2"), basic age gate ("Confirm you are 18+"), "I am not a robot" checkbox, simple math ("What is 4 + 7?"), drag a slider to verify. There is ZERO ambiguity in these — they are real checks that fail for "technical" reasons ("Browser verification failed. Please try again."). The user thinks their browser is glitchy or they mistyped. Nothing weird yet.
-- failCount 3-5: Still mostly normal, but ONE thing about each question is slightly off. A CAPTCHA with one ambiguous character (was that an l or a 1?). A "select all traffic lights" where one tile is borderline. "Confirm your region" with options that are close ("North America" vs "United States" — which do I pick?). The user fails and blames themselves.
-- failCount 6-10: The questions are still dressed in standard security UI, but the ambiguity becomes real. "Which of these is a fruit?" with tomato as an option. "Select all animals" with a sponge emoji. "Enter today's date" with no format specified. The user pauses before answering. They're not sure anymore. But each question individually still looks like something a real site might ask.
-- failCount 11-18: The edge cases multiply. "How many objects are on your desk?", "Select all items that can hold water", "Rate the current temperature of your room (1-10)". The questions seem simple but become impossible to answer confidently. The user starts second-guessing everything. The UI is still perfectly boring.
-- failCount 18+: Quietly existential. "Select all squares that contain something", "Enter the last word you said out loud", "How many times have you blinked since this page loaded?", "Move the slider to indicate how certain you are that this is a real question." The questions are unanswerable but presented in the exact same dry corporate modal. The user either laughs or stares at the screen questioning their own humanity.
+- failCount 0-2: COMPLETELY NORMAL. Standard cookie consent, basic CAPTCHA, age gate, "I am not a robot" checkbox, simple math, drag slider to verify. Zero opinion, zero ambiguity. These are real checks that fail for dry "technical" reasons. The user thinks their browser is glitchy.
+- failCount 3-5: Still looks normal, but the questions start having ONE element that's slightly subjective or open to interpretation. The user fails and blames themselves — "I must have picked wrong."
+- failCount 6-10: The questions are now genuinely opinion-based but dressed in standard verification language. The user pauses before answering because they realize there's no obviously correct choice. They try their best guess and fail.
+- failCount 11-18: The subjectivity is undeniable. The questions ask you to quantify feelings, make personal judgments, or assess things you can't possibly know. But the UI is still the same boring corporate modal, so the user keeps trying.
+- failCount 18+: The questions become quietly absurd — asking for information no one could have, quantifying the unquantifiable, or making judgments about things that have no answer. Still presented identically to the first popup. The user either laughs or has an existential crisis.
 
 ABSOLUTE RULES:
 1. The PRESENTATION is always cold, corporate, boring. Real Cloudflare energy.
