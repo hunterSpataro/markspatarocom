@@ -114,21 +114,58 @@ app.post("/api/popup", async (req, res) => {
     const cleaned = text.replace(/```json\s*/g, "").replace(/```\s*/g, "").trim();
 
     const popup = JSON.parse(cleaned);
+
+    // Validate and normalize the response
+    const validTypes = ["opinion_buttons", "checkbox_agree", "slider_verify", "captcha_type", "captcha_math", "captcha_select", "timer", "text_input", "confidence_scale"];
+    if (!popup.type || !validTypes.includes(popup.type)) {
+      popup.type = "opinion_buttons";
+    }
+    if (!popup.dismiss_config || typeof popup.dismiss_config !== "object") {
+      popup.dismiss_config = {};
+    }
+    if (!popup.failure_message) {
+      popup.failure_message = "Verification failed. Please try again.";
+    }
+    if (!popup.title) {
+      popup.title = "Security Check";
+    }
+    if (!popup.body) {
+      popup.body = "Please complete this step to continue.";
+    }
+
+    // Normalize common Haiku field name mistakes
+    const cfg = popup.dismiss_config;
+    if (popup.type === "opinion_buttons" && (!cfg.buttons || cfg.buttons.length === 0)) {
+      // Haiku sometimes uses "options" instead of "buttons"
+      if (cfg.options) { cfg.buttons = cfg.options; delete cfg.options; }
+      else {
+        popup.type = "text_input";
+        popup.dismiss_config = { question: cfg.question || "Enter your response to continue." };
+      }
+    }
+    if (popup.type === "checkbox_agree" && (!cfg.statements || cfg.statements.length === 0)) {
+      if (cfg.checkboxes) { cfg.statements = cfg.checkboxes; delete cfg.checkboxes; }
+      else if (cfg.options) { cfg.statements = cfg.options; delete cfg.options; }
+      else if (cfg.items) { cfg.statements = cfg.items; delete cfg.items; }
+    }
+    if (popup.type === "captcha_select" && (!cfg.grid_items || cfg.grid_items.length === 0)) {
+      if (cfg.items) { cfg.grid_items = cfg.items; delete cfg.items; }
+      else if (cfg.emojis) { cfg.grid_items = cfg.emojis; delete cfg.emojis; }
+      else if (cfg.grid) { cfg.grid_items = cfg.grid; delete cfg.grid; }
+    }
+
     res.json(popup);
   } catch (err) {
     console.error("Error generating popup:", err.message);
-    // Fallback popup so the experience never breaks
-    res.json({
-      title: "Security Check",
-      body: "Please complete this step to continue to the site.",
-      type: "opinion_buttons",
-      dismiss_config: {
-        question: "Select the category that best describes this site:",
-        buttons: ["Technology", "Business", "Software"],
-      },
-      failure_message: "Verification failed. Please try again.",
-      success_first: false,
-    });
+    // Rotating fallback popups so the experience never breaks or repeats
+    const fallbacks = [
+      { title: "Security Check", body: "Please complete this step to continue.", type: "opinion_buttons", dismiss_config: { question: "Select the category that best describes this site:", buttons: ["Retail", "Business", "Recreation"] }, failure_message: "Verification failed. Please try again.", success_first: false },
+      { title: "Verify you are human", body: "This check is required to prevent automated access.", type: "captcha_type", dismiss_config: { phrase: "hR4kL9m" }, failure_message: "The text you entered did not match. Please try again.", success_first: false },
+      { title: "One more step", body: "Please verify to continue to the site.", type: "slider_verify", dismiss_config: { label: "Drag the slider to verify", unit: "" }, failure_message: "Value did not match the expected range. Please try again.", success_first: false },
+      { title: "Confirm your identity", body: "We need to verify your session.", type: "text_input", dismiss_config: { question: "Type the name of your current browser:" }, failure_message: "Your response could not be verified. Please try again.", success_first: false },
+      { title: "Security Verification", body: "Please complete this check.", type: "checkbox_agree", dismiss_config: { statements: ["I am not a robot", "I agree to the terms of service", "I am accessing this site from my usual device", "I confirm this is not an automated session"] }, failure_message: "Verification failed. Please review your selections and try again.", success_first: false },
+    ];
+    res.json(fallbacks[failCount % fallbacks.length]);
   }
 });
 

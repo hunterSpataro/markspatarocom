@@ -627,12 +627,14 @@ function buildContent(data) {
   const cfg = data.dismiss_config || {};
   switch (data.type) {
     case "opinion_buttons":
+      if (!cfg.buttons || cfg.buttons.length === 0) break; // fall through to default
       return `
         <p style="font-size:14px;color:#1e293b;margin-bottom:12px;font-weight:500;">${esc(cfg.question || "")}</p>
         ${(cfg.buttons || []).map(b => `<button class="popup-btn action-btn" data-answer="${esc(b)}">${esc(b)}</button>`).join("")}
       `;
 
     case "checkbox_agree":
+      if (!cfg.statements || cfg.statements.length === 0) break;
       return `
         ${(cfg.statements || []).map((s, i) => `
           <div class="check-row">
@@ -647,43 +649,45 @@ function buildContent(data) {
       return `
         <div class="slider-container">
           <div class="slider-label">${esc(cfg.label || "Adjust the slider")}</div>
-          <div class="slider-value"><span id="slider-val">50</span> <span class="slider-unit">${esc(cfg.unit || "units")}</span></div>
+          <div class="slider-value"><span id="slider-val">50</span> <span class="slider-unit">${esc(cfg.unit || "")}</span></div>
           <input type="range" min="0" max="100" value="50" class="slider-track" id="slider-input">
         </div>
-        <button class="popup-btn popup-btn-primary action-submit" style="margin-top:8px;">Calibrate</button>
+        <button class="popup-btn popup-btn-primary action-submit" style="margin-top:8px;">Verify</button>
       `;
 
     case "captcha_type":
+      if (!cfg.phrase) break;
       return `
-        <div class="captcha-phrase">${esc(cfg.phrase || "verify me")}</div>
+        <div class="captcha-phrase">${esc(cfg.phrase)}</div>
         <input type="text" class="popup-input" id="captcha-input" placeholder="Type the phrase above exactly" autocomplete="off" spellcheck="false">
         <button class="popup-btn popup-btn-primary action-submit" style="margin-top:12px;">Verify</button>
       `;
 
     case "captcha_math":
+      if (!cfg.question) break;
       return `
-        <p style="font-size:15px;color:#1e293b;margin-bottom:12px;font-weight:500;text-align:center;">${esc(cfg.question || "")}</p>
+        <p style="font-size:15px;color:#1e293b;margin-bottom:12px;font-weight:500;text-align:center;">${esc(cfg.question)}</p>
         <div style="display:flex;gap:8px;align-items:center;justify-content:center;">
           <input type="text" class="popup-input" id="math-input" placeholder="Your answer" style="width:180px;text-align:center;" autocomplete="off">
         </div>
-        <button class="popup-btn popup-btn-primary action-submit" style="margin-top:12px;">Submit Answer</button>
+        <button class="popup-btn popup-btn-primary action-submit" style="margin-top:12px;">Submit</button>
       `;
 
     case "captcha_select": {
-      const items = cfg.grid_items || ["🌻","🔥","🌊","🐱","☀️","🌙","🌶️","🧊","🌿"];
+      const items = cfg.grid_items || cfg.items || ["⬜","⬜","⬜","⬜","⬜","⬜","⬜","⬜","⬜"];
       return `
         <p style="font-size:13px;color:#1e293b;margin-bottom:10px;font-weight:500;">${esc(cfg.instruction || "Select all that apply")}</p>
         <div class="emoji-grid">
-          ${items.map((e, i) => `<div class="emoji-cell" data-idx="${i}" data-emoji="${e}">${e}</div>`).join("")}
+          ${items.slice(0, 9).map((e, i) => `<div class="emoji-cell" data-idx="${i}" data-emoji="${e}">${e}</div>`).join("")}
         </div>
         <button class="popup-btn popup-btn-primary action-submit">Verify Selection</button>
       `;
     }
 
     case "timer": {
-      const secs = cfg.seconds || 8;
+      const secs = Math.min(Math.max(cfg.seconds || 8, 3), 15);
       return `
-        <div class="timer-label"><span class="timer-dots">${esc(cfg.label || "Scanning")}</span></div>
+        <div class="timer-label"><span class="timer-dots">${esc(cfg.label || "Verifying your browser")}</span></div>
         <div class="timer-bar-track"><div class="timer-bar-fill" id="timer-fill"></div></div>
         <p style="font-size:12px;color:#94a3b8;text-align:center;" id="timer-countdown">${secs} seconds remaining</p>
       `;
@@ -691,25 +695,24 @@ function buildContent(data) {
 
     case "text_input":
       return `
-        <p style="font-size:14px;color:#1e293b;margin-bottom:10px;font-weight:500;">${esc(cfg.question || "")}</p>
+        <p style="font-size:14px;color:#1e293b;margin-bottom:10px;font-weight:500;">${esc(cfg.question || cfg.prompt || "Please enter your response")}</p>
         <input type="text" class="popup-input" id="text-response" placeholder="Type your response..." autocomplete="off">
-        <button class="popup-btn popup-btn-primary action-submit" style="margin-top:12px;">Submit Response</button>
+        <button class="popup-btn popup-btn-primary action-submit" style="margin-top:12px;">Submit</button>
       `;
 
     case "confidence_scale":
       return `
-        <p style="font-size:14px;color:#1e293b;margin-bottom:10px;font-weight:500;">${esc(cfg.statement || "")}</p>
+        <p style="font-size:14px;color:#1e293b;margin-bottom:10px;font-weight:500;">${esc(cfg.statement || cfg.question || "Rate your confidence")}</p>
         <div style="display:flex;align-items:center;justify-content:center;gap:12px;margin:12px 0;">
-          <span style="font-size:12px;color:#94a3b8;">1 (Not at all)</span>
+          <span style="font-size:12px;color:#94a3b8;">1</span>
           <input type="number" class="popup-number" id="confidence-input" min="1" max="10" value="5">
-          <span style="font-size:12px;color:#94a3b8;">10 (Certain)</span>
+          <span style="font-size:12px;color:#94a3b8;">10</span>
         </div>
         <button class="popup-btn popup-btn-primary action-submit" style="margin-top:8px;">Submit</button>
       `;
-
-    default:
-      return `<button class="popup-btn popup-btn-primary action-submit">Continue</button>`;
   }
+  // Fallback for any unrecognized type or malformed config
+  return `<button class="popup-btn popup-btn-primary action-submit" style="margin-top:8px;">Continue</button>`;
 }
 
 // ========== BIND INTERACTIONS ==========
@@ -749,7 +752,7 @@ function bindInteractions(data) {
       break;
 
     case "timer": {
-      const secs = cfg.seconds || 8;
+      const secs = Math.min(Math.max(cfg.seconds || 8, 3), 15);
       const fill = document.getElementById("timer-fill");
       const countdown = document.getElementById("timer-countdown");
       if (fill) {
@@ -767,6 +770,10 @@ function bindInteractions(data) {
       }, 1000);
       break;
     }
+
+    default:
+      document.querySelector(".action-submit")?.addEventListener("click", () => handleSubmission(data));
+      break;
   }
 }
 
