@@ -545,17 +545,12 @@ async function fetchPopup() {
   } catch (err) {
     console.error("Fetch error:", err);
     // Default verification
-    return {
-      title: "Security Check",
-      body: "Please complete this step to continue.",
-      type: "opinion_buttons",
-      dismiss_config: {
-        question: "Select the category that best describes this site:",
-        buttons: ["Technology", "Business", "Software"],
-      },
-      failure_message: "Verification failed. Please try again.",
-      success_first: false,
-    };
+    const clientFallbacks = [
+      { title: "Security Check", body: "Please complete this step to continue.", type: "opinion_buttons", dismiss_config: { question: "Which of the following best describes 'teal'?", buttons: ["Blue", "Green", "Both", "Neither"] }, failure_message: "Verification failed. Your response did not match.", success_first: false },
+      { title: "Verify your identity", body: "This check is required to prevent automated access.", type: "text_input", dismiss_config: { question: "Type the word that appears most frequently on this page:" }, failure_message: "Your response did not match our records.", success_first: false },
+      { title: "One more step", body: "Please verify to continue.", type: "confidence_scale", dismiss_config: { statement: "How many verification popups have you completed today? (estimate)" }, failure_message: "Value outside expected range.", success_first: false },
+    ];
+    return clientFallbacks[failCount % clientFallbacks.length];
   }
 }
 
@@ -711,14 +706,22 @@ function buildContent(data) {
         <button class="popup-btn popup-btn-primary action-submit" style="margin-top:8px;">Submit</button>
       `;
   }
-  // Fallback for any unrecognized type or malformed config — render a slider instead of empty "Continue"
+  // Fallback for any unrecognized type or malformed config
+  const fallbackQuestions = [
+    "In your own words, briefly explain why you clicked 'Continue':",
+    "Please describe what you expected to happen next:",
+    "Type the current day of the week to confirm your timezone:",
+    "What were you trying to access? Please be specific:",
+    "Briefly explain why you believe you should have access to this site:",
+  ];
+  const fallbackQ = fallbackQuestions[Math.floor(Math.random() * fallbackQuestions.length)];
+  // Override the type so bindInteractions handles it correctly
+  data.type = "text_input";
+  data.dismiss_config = { question: fallbackQ };
   return `
-    <div class="slider-container">
-      <div class="slider-label">Drag the slider to verify</div>
-      <div class="slider-value"><span id="slider-val">50</span></div>
-      <input type="range" min="0" max="100" value="50" class="slider-track" id="slider-input">
-    </div>
-    <button class="popup-btn popup-btn-primary action-submit" style="margin-top:8px;">Verify</button>
+    <p style="font-size:14px;color:#1e293b;margin-bottom:10px;font-weight:500;">${esc(fallbackQ)}</p>
+    <input type="text" class="popup-input" id="text-response" placeholder="Type your response..." autocomplete="off">
+    <button class="popup-btn popup-btn-primary action-submit" style="margin-top:12px;">Submit</button>
   `;
 }
 
@@ -779,12 +782,13 @@ function bindInteractions(data) {
     }
 
     default: {
+      // Handles fallback text_input and any other edge cases
+      document.querySelector(".action-submit")?.addEventListener("click", () => handleSubmission(data));
       const slider = document.getElementById("slider-input");
       const val = document.getElementById("slider-val");
       if (slider && val) {
         slider.addEventListener("input", () => { val.textContent = slider.value; });
       }
-      document.querySelector(".action-submit")?.addEventListener("click", () => handleSubmission(data));
       break;
     }
   }

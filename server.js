@@ -110,8 +110,14 @@ app.post("/api/popup", async (req, res) => {
     const data = await response.json();
     const text = data.content?.[0]?.text || "";
 
-    // Strip any markdown fences Haiku might add despite instructions
-    const cleaned = text.replace(/```json\s*/g, "").replace(/```\s*/g, "").trim();
+    // Strip any markdown fences, leading prose, or trailing junk Haiku might add
+    let cleaned = text.replace(/```json\s*/g, "").replace(/```\s*/g, "").trim();
+    // If Haiku added prose before the JSON, extract just the JSON object
+    const jsonMatch = cleaned.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) {
+      throw new Error("No JSON object found in Haiku response: " + cleaned.slice(0, 200));
+    }
+    cleaned = jsonMatch[0];
 
     const popup = JSON.parse(cleaned);
 
@@ -194,6 +200,14 @@ app.post("/api/popup", async (req, res) => {
       if (!cfg.statement && cfg.label) { cfg.statement = cfg.label; }
     }
 
+    // slider_verify: needs "label" string
+    if (popup.type === "slider_verify") {
+      if (!cfg.label && cfg.instruction) { cfg.label = cfg.instruction; }
+      if (!cfg.label && cfg.question) { cfg.label = cfg.question; }
+      if (!cfg.label && cfg.prompt) { cfg.label = cfg.prompt; }
+      if (!cfg.label) { cfg.label = "Adjust the slider to the correct value"; }
+    }
+
     // FINAL CHECK: if the config is STILL broken after normalization, swap to a working type
     // This ensures the client NEVER gets an empty popup
     const isConfigValid = (
@@ -212,26 +226,35 @@ app.post("/api/popup", async (req, res) => {
       console.log("Invalid config for type", popup.type, "- substituting working question. Config was:", JSON.stringify(cfg));
       // Try to salvage: if there's a question/string anywhere in the config, use text_input
       const anyString = Object.values(cfg).find(v => typeof v === "string" && v.length > 5);
-      if (anyString) {
+      const anyArray = Object.values(cfg).find(v => Array.isArray(v) && v.length >= 2);
+      if (anyArray && anyArray.every(v => typeof v === "string")) {
+        // Found an array of strings — use as opinion_buttons
+        popup.type = "opinion_buttons";
+        popup.dismiss_config = { question: anyString || "Select the correct option to continue:", buttons: anyArray.slice(0, 4) };
+      } else if (anyString) {
         popup.type = "text_input";
         popup.dismiss_config = { question: anyString };
       } else {
-        // Last resort: use a slider which needs no config
-        popup.type = "slider_verify";
-        popup.dismiss_config = { label: "Drag the slider to verify", unit: "" };
+        // Last resort: use confidence_scale which is more interesting than a bare slider
+        popup.type = "confidence_scale";
+        popup.dismiss_config = { statement: "Rate your confidence that you are accessing this site intentionally (1-10):" };
       }
     }
 
     res.json(popup);
   } catch (err) {
     console.error("Error generating popup:", err.message);
-    // Rotating fallback popups so the experience never breaks or repeats
+    // Rotating fallback popups so the experience never breaks or repeats — these should still be funny
     const fallbacks = [
-      { title: "Security Check", body: "Please complete this step to continue.", type: "opinion_buttons", dismiss_config: { question: "Select the category that best describes this site:", buttons: ["Retail", "Business", "Recreation"] }, failure_message: "Verification failed. Please try again.", success_first: false },
-      { title: "Verify you are human", body: "This check is required to prevent automated access.", type: "captcha_type", dismiss_config: { phrase: "hR4kL9m" }, failure_message: "The text you entered did not match. Please try again.", success_first: false },
-      { title: "One more step", body: "Please verify to continue to the site.", type: "slider_verify", dismiss_config: { label: "Drag the slider to verify", unit: "" }, failure_message: "Value did not match the expected range. Please try again.", success_first: false },
-      { title: "Confirm your identity", body: "We need to verify your session.", type: "text_input", dismiss_config: { question: "Type the name of your current browser:" }, failure_message: "Your response could not be verified. Please try again.", success_first: false },
-      { title: "Security Verification", body: "Please complete this check.", type: "checkbox_agree", dismiss_config: { statements: ["I am not a robot", "I agree to the terms of service", "I am accessing this site from my usual device", "I confirm this is not an automated session"] }, failure_message: "Verification failed. Please review your selections and try again.", success_first: false },
+      { title: "Security Check", body: "Please complete this step to continue.", type: "opinion_buttons", dismiss_config: { question: "Which of these is the warmest color?", buttons: ["Red", "Yellow", "Orange"] }, failure_message: "Verification failed. Your response did not match the expected value.", success_first: false },
+      { title: "Verify you are human", body: "This check is required to prevent automated access.", type: "captcha_type", dismiss_config: { phrase: "IlI1lI1l" }, failure_message: "The text you entered did not match. Please try again.", success_first: false },
+      { title: "One more step", body: "Please verify to continue to the site.", type: "confidence_scale", dismiss_config: { statement: "On a scale of 1-10, how confident are you that this is the correct answer?" }, failure_message: "Your confidence level did not fall within the acceptable range.", success_first: false },
+      { title: "Confirm your identity", body: "We need to verify your session.", type: "text_input", dismiss_config: { question: "Describe the color blue without using the word 'blue' or naming any other colors:" }, failure_message: "Your response could not be verified against our records.", success_first: false },
+      { title: "Security Verification", body: "Please complete this check.", type: "checkbox_agree", dismiss_config: { statements: ["I have read and understood this checkbox", "I confirm that the previous checkbox is accurate", "I am not a robot pretending to read these checkboxes", "All of the above statements were selected voluntarily"] }, failure_message: "Verification failed. Inconsistent selection detected.", success_first: false },
+      { title: "Identity Check", body: "An additional check is required for this session.", type: "slider_verify", dismiss_config: { label: "Set the slider to the correct value", unit: "trust units" }, failure_message: "Value did not match the expected calibration.", success_first: false },
+      { title: "Session Verification", body: "Please complete this verification step.", type: "captcha_math", dismiss_config: { question: "If you have 3 quarters, 4 dimes, and 2 nickels, how many coins do you have?", plausible_answers: ["9", "nine"] }, failure_message: "Incorrect. The expected answer was different.", success_first: false },
+      { title: "Automated Check", body: "This check helps us prevent unauthorized access.", type: "captcha_select", dismiss_config: { instruction: "Select all images that could be considered food", grid_items: ["🍕", "🌵", "🍫", "🧊", "🍋", "🌶️", "🧂", "🍯", "🫒"] }, failure_message: "Selection did not match. Please try again.", success_first: false },
+      { title: "Verification Required", body: "We need to verify this session before proceeding.", type: "timer", dismiss_config: { seconds: 7, label: "Analyzing browser fingerprint" }, failure_message: "Browser analysis inconclusive. Additional verification needed.", success_first: false },
     ];
     res.json(fallbacks[failCount % fallbacks.length]);
   }
@@ -239,4 +262,7 @@ app.post("/api/popup", async (req, res) => {
 
 app.listen(PORT, () => {
   console.log(`Verification system running on port ${PORT}`);
+  if (!process.env.HAIKU_API_KEY) {
+    console.warn("⚠️  WARNING: HAIKU_API_KEY is not set! All popups will use fallbacks.");
+  }
 });
