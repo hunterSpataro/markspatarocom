@@ -31,6 +31,8 @@ JSON fields:
 
 Types and dismiss_config — FORMAT ONLY (you generate the content creatively):
 
+IMPORTANT: You MUST use EXACTLY these field names inside dismiss_config. Do not rename or restructure them.
+
 - "opinion_buttons": { "question": "question text", "buttons": ["A", "B", "C"] }
   Present 2-3 options for a question where the answer is genuinely subjective or a matter of interpretation. The question should be framed as if there IS a correct answer, but really it's just opinion. Think: preferences disguised as facts, categorization where boundaries are fuzzy, "which of these best represents X" where they all do. The user picks confidently, fails, and thinks "I guess they wanted the other one" — but that would fail too.
 
@@ -103,214 +105,40 @@ app.post("/api/popup", async (req, res) => {
 
     if (!response.ok) {
       const errText = await response.text();
-      console.error("Anthropic API error:", response.status, errText);
-      // Throw so we land in the catch block with proper fallbacks
-      throw new Error(`Anthropic API ${response.status}: ${errText.slice(0, 200)}`);
+      console.error("API error:", response.status, errText);
+      throw new Error("API " + response.status);
     }
 
     const data = await response.json();
     const text = data.content?.[0]?.text || "";
 
-    // Strip any markdown fences, leading prose, or trailing junk Haiku might add
-    let cleaned = text.replace(/```json\s*/g, "").replace(/```\s*/g, "").trim();
-    // If Haiku added prose before the JSON, extract just the JSON object
-    const jsonMatch = cleaned.match(/\{[\s\S]*\}/);
+    // Extract JSON — handles markdown fences or leading prose
+    const jsonMatch = text.match(/\{[\s\S]*\}/);
     if (!jsonMatch) {
-      throw new Error("No JSON object found in Haiku response: " + cleaned.slice(0, 200));
-    }
-    cleaned = jsonMatch[0];
-
-    const popup = JSON.parse(cleaned);
-
-    // LOG the raw parsed response so we can diagnose issues
-    console.log("Haiku raw response:", JSON.stringify(popup, null, 2));
-
-    // Validate and normalize the response
-    const validTypes = ["opinion_buttons", "checkbox_agree", "slider_verify", "captcha_type", "captcha_math", "captcha_select", "timer", "text_input", "confidence_scale"];
-    if (!popup.type || !validTypes.includes(popup.type)) {
-      popup.type = "opinion_buttons";
+      console.error("No JSON found in response:", text.slice(0, 300));
+      throw new Error("No JSON in response");
     }
 
-    // Haiku might use different key names for the config object
-    if (!popup.dismiss_config || typeof popup.dismiss_config !== "object") {
-      popup.dismiss_config = popup.config || popup.content || popup.options || popup.data || {};
-    }
-    if (typeof popup.dismiss_config !== "object" || Array.isArray(popup.dismiss_config)) {
-      popup.dismiss_config = {};
-    }
+    const popup = JSON.parse(jsonMatch[0]);
 
-    if (!popup.failure_message) {
-      popup.failure_message = "Verification failed. Please try again.";
-    }
-    if (!popup.title) {
-      popup.title = "Security Check";
-    }
-    if (!popup.body) {
-      popup.body = "Please complete this step to continue.";
-    }
+    // Fill in defaults for missing top-level fields, nothing more
+    if (!popup.title) popup.title = "Security Check";
+    if (!popup.body) popup.body = "Please complete this step to continue.";
+    if (!popup.failure_message) popup.failure_message = "Verification failed. Please try again.";
+    if (!popup.dismiss_config) popup.dismiss_config = {};
 
-    // Normalize common Haiku field name variations
-    const cfg = popup.dismiss_config;
-
-    // CRITICAL: Haiku often puts config fields at the ROOT level instead of inside dismiss_config.
-    // Pull them down into cfg if cfg is missing them.
-    const rootKeys = Object.keys(popup).filter(k => !["type", "title", "body", "dismiss_config", "failure_message", "success_first", "success_but"].includes(k));
-    for (const key of rootKeys) {
-      if (!(key in cfg)) {
-        cfg[key] = popup[key];
-      }
-    }
-
-    // opinion_buttons: needs "buttons" array
-    if (popup.type === "opinion_buttons") {
-      if (!cfg.buttons && cfg.options) { cfg.buttons = cfg.options; }
-      if (!cfg.buttons && cfg.choices) { cfg.buttons = cfg.choices; }
-      // If still no buttons, look for ANY array in the config
-      if (!cfg.buttons || !Array.isArray(cfg.buttons) || cfg.buttons.length === 0) {
-        const arrays = Object.values(cfg).filter(v => Array.isArray(v) && v.length >= 2);
-        if (arrays.length > 0) { cfg.buttons = arrays[0]; }
-      }
-    }
-
-    // checkbox_agree: needs "statements" array
-    if (popup.type === "checkbox_agree") {
-      if (!cfg.statements && cfg.checkboxes) { cfg.statements = cfg.checkboxes; }
-      if (!cfg.statements && cfg.options) { cfg.statements = cfg.options; }
-      if (!cfg.statements && cfg.items) { cfg.statements = cfg.items; }
-      if (!cfg.statements || !Array.isArray(cfg.statements) || cfg.statements.length === 0) {
-        const arrays = Object.values(cfg).filter(v => Array.isArray(v) && v.length >= 2);
-        if (arrays.length > 0) { cfg.statements = arrays[0]; }
-      }
-    }
-
-    // captcha_select: needs "grid_items" array
-    if (popup.type === "captcha_select") {
-      if (!cfg.grid_items && cfg.items) { cfg.grid_items = cfg.items; }
-      if (!cfg.grid_items && cfg.emojis) { cfg.grid_items = cfg.emojis; }
-      if (!cfg.grid_items && cfg.grid) { cfg.grid_items = cfg.grid; }
-      if (!cfg.grid_items || !Array.isArray(cfg.grid_items) || cfg.grid_items.length === 0) {
-        const arrays = Object.values(cfg).filter(v => Array.isArray(v) && v.length >= 2);
-        if (arrays.length > 0) { cfg.grid_items = arrays[0]; }
-      }
-    }
-
-    // captcha_type: needs "phrase" string
-    if (popup.type === "captcha_type") {
-      if (!cfg.phrase && cfg.text) { cfg.phrase = cfg.text; }
-      if (!cfg.phrase && cfg.captcha) { cfg.phrase = cfg.captcha; }
-      if (!cfg.phrase && cfg.string) { cfg.phrase = cfg.string; }
-      // Last resort: find any short string that looks like a captcha phrase
-      if (!cfg.phrase) {
-        const anyStr = Object.values(cfg).find(v => typeof v === "string" && v.length >= 4 && v.length <= 30);
-        if (anyStr) cfg.phrase = anyStr;
-      }
-    }
-
-    // captcha_math: needs "question" string
-    if (popup.type === "captcha_math") {
-      if (!cfg.question && cfg.problem) { cfg.question = cfg.problem; }
-      if (!cfg.question && cfg.prompt) { cfg.question = cfg.prompt; }
-      if (!cfg.question && cfg.expression) { cfg.question = cfg.expression; }
-      if (!cfg.question) {
-        const anyStr = Object.values(cfg).find(v => typeof v === "string" && v.length > 5);
-        if (anyStr) cfg.question = anyStr;
-      }
-    }
-
-    // text_input: needs "question" string
-    if (popup.type === "text_input") {
-      if (!cfg.question && cfg.prompt) { cfg.question = cfg.prompt; }
-      if (!cfg.question && cfg.label) { cfg.question = cfg.label; }
-      if (!cfg.question && cfg.text) { cfg.question = cfg.text; }
-      if (!cfg.question) {
-        const anyStr = Object.values(cfg).find(v => typeof v === "string" && v.length > 5);
-        if (anyStr) cfg.question = anyStr;
-      }
-    }
-
-    // confidence_scale: needs "statement" string
-    if (popup.type === "confidence_scale") {
-      if (!cfg.statement && cfg.question) { cfg.statement = cfg.question; }
-      if (!cfg.statement && cfg.prompt) { cfg.statement = cfg.prompt; }
-      if (!cfg.statement && cfg.label) { cfg.statement = cfg.label; }
-      if (!cfg.statement && cfg.text) { cfg.statement = cfg.text; }
-      if (!cfg.statement) {
-        const anyStr = Object.values(cfg).find(v => typeof v === "string" && v.length > 5);
-        if (anyStr) cfg.statement = anyStr;
-      }
-    }
-
-    // slider_verify: needs "label" string
-    if (popup.type === "slider_verify") {
-      if (!cfg.label && cfg.instruction) { cfg.label = cfg.instruction; }
-      if (!cfg.label && cfg.question) { cfg.label = cfg.question; }
-      if (!cfg.label && cfg.prompt) { cfg.label = cfg.prompt; }
-      if (!cfg.label && cfg.text) { cfg.label = cfg.text; }
-      if (!cfg.label) {
-        const anyStr = Object.values(cfg).find(v => typeof v === "string" && v.length > 5);
-        if (anyStr) cfg.label = anyStr;
-      }
-      if (!cfg.label) { cfg.label = "Adjust the slider to the correct value"; }
-    }
-
-    // timer: needs "label" string
-    if (popup.type === "timer") {
-      if (!cfg.label && cfg.message) { cfg.label = cfg.message; }
-      if (!cfg.label && cfg.text) { cfg.label = cfg.text; }
-      if (!cfg.label) {
-        const anyStr = Object.values(cfg).find(v => typeof v === "string" && v.length > 5);
-        if (anyStr) cfg.label = anyStr;
-      }
-      if (!cfg.label) { cfg.label = "Verifying your browser"; }
-    }
-
-    // FINAL CHECK: if the config is STILL broken after normalization, swap to a working type
-    console.log("After normalization — type:", popup.type, "cfg:", JSON.stringify(cfg));
-    const isConfigValid = (
-      (popup.type === "opinion_buttons" && Array.isArray(cfg.buttons) && cfg.buttons.length >= 2) ||
-      (popup.type === "checkbox_agree" && Array.isArray(cfg.statements) && cfg.statements.length >= 2) ||
-      (popup.type === "captcha_type" && cfg.phrase) ||
-      (popup.type === "captcha_math" && cfg.question) ||
-      (popup.type === "captcha_select" && Array.isArray(cfg.grid_items) && cfg.grid_items.length >= 4) ||
-      (popup.type === "text_input" && cfg.question) ||
-      (popup.type === "confidence_scale" && cfg.statement) ||
-      (popup.type === "slider_verify") ||
-      (popup.type === "timer")
-    );
-
-    if (!isConfigValid) {
-      console.log("Invalid config for type", popup.type, "- substituting working question. Config was:", JSON.stringify(cfg));
-      // Try to salvage: if there's a question/string anywhere in the config, use text_input
-      const anyString = Object.values(cfg).find(v => typeof v === "string" && v.length > 5);
-      const anyArray = Object.values(cfg).find(v => Array.isArray(v) && v.length >= 2);
-      if (anyArray && anyArray.every(v => typeof v === "string")) {
-        // Found an array of strings — use as opinion_buttons
-        popup.type = "opinion_buttons";
-        popup.dismiss_config = { question: anyString || "Select the correct option to continue:", buttons: anyArray.slice(0, 4) };
-      } else if (anyString) {
-        popup.type = "text_input";
-        popup.dismiss_config = { question: anyString };
-      } else {
-        // Last resort: use confidence_scale which is more interesting than a bare slider
-        popup.type = "confidence_scale";
-        popup.dismiss_config = { statement: "Rate your confidence that you are accessing this site intentionally (1-10):" };
-      }
-    }
-
+    console.log("OK type:", popup.type, "| keys:", Object.keys(popup.dismiss_config));
     res.json(popup);
+
   } catch (err) {
-    console.error("Error generating popup:", err.message);
-    // Rotating fallback popups so the experience never breaks or repeats — these should still be funny
+    console.error("Popup error:", err.message);
+    // Fallbacks only used when the API is genuinely unreachable
     const fallbacks = [
-      { title: "Security Check", body: "Please complete this step to continue.", type: "opinion_buttons", dismiss_config: { question: "Which of these is the warmest color?", buttons: ["Red", "Yellow", "Orange"] }, failure_message: "Verification failed. Your response did not match the expected value.", success_first: false },
-      { title: "Verify you are human", body: "This check is required to prevent automated access.", type: "captcha_type", dismiss_config: { phrase: "IlI1lI1l" }, failure_message: "The text you entered did not match. Please try again.", success_first: false },
-      { title: "One more step", body: "Please verify to continue to the site.", type: "confidence_scale", dismiss_config: { statement: "On a scale of 1-10, how confident are you that this is the correct answer?" }, failure_message: "Your confidence level did not fall within the acceptable range.", success_first: false },
-      { title: "Confirm your identity", body: "We need to verify your session.", type: "text_input", dismiss_config: { question: "Describe the color blue without using the word 'blue' or naming any other colors:" }, failure_message: "Your response could not be verified against our records.", success_first: false },
-      { title: "Security Verification", body: "Please complete this check.", type: "checkbox_agree", dismiss_config: { statements: ["I have read and understood this checkbox", "I confirm that the previous checkbox is accurate", "I am not a robot pretending to read these checkboxes", "All of the above statements were selected voluntarily"] }, failure_message: "Verification failed. Inconsistent selection detected.", success_first: false },
-      { title: "Identity Check", body: "An additional check is required for this session.", type: "slider_verify", dismiss_config: { label: "Set the slider to the correct value", unit: "trust units" }, failure_message: "Value did not match the expected calibration.", success_first: false },
-      { title: "Session Verification", body: "Please complete this verification step.", type: "captcha_math", dismiss_config: { question: "If you have 3 quarters, 4 dimes, and 2 nickels, how many coins do you have?", plausible_answers: ["9", "nine"] }, failure_message: "Incorrect. The expected answer was different.", success_first: false },
-      { title: "Automated Check", body: "This check helps us prevent unauthorized access.", type: "captcha_select", dismiss_config: { instruction: "Select all images that could be considered food", grid_items: ["🍕", "🌵", "🍫", "🧊", "🍋", "🌶️", "🧂", "🍯", "🫒"] }, failure_message: "Selection did not match. Please try again.", success_first: false },
-      { title: "Verification Required", body: "We need to verify this session before proceeding.", type: "timer", dismiss_config: { seconds: 7, label: "Analyzing browser fingerprint" }, failure_message: "Browser analysis inconclusive. Additional verification needed.", success_first: false },
+      { title: "Security Check", body: "Please complete this step to continue.", type: "opinion_buttons", dismiss_config: { question: "Select the category that best describes this site:", buttons: ["Retail", "Business", "Recreation"] }, failure_message: "Verification failed. Please try again.", success_first: false },
+      { title: "Verify you are human", body: "This check is required to prevent automated access.", type: "captcha_type", dismiss_config: { phrase: "hR4kL9m" }, failure_message: "The text you entered did not match. Please try again.", success_first: false },
+      { title: "One more step", body: "Please verify to continue to the site.", type: "slider_verify", dismiss_config: { label: "Drag the slider to verify", unit: "" }, failure_message: "Value did not match the expected range. Please try again.", success_first: false },
+      { title: "Confirm your identity", body: "We need to verify your session.", type: "text_input", dismiss_config: { question: "Type the name of your current browser:" }, failure_message: "Your response could not be verified. Please try again.", success_first: false },
+      { title: "Security Verification", body: "Please complete this check.", type: "checkbox_agree", dismiss_config: { statements: ["I am not a robot", "I agree to the terms of service", "I am accessing this site from my usual device", "I confirm this is not an automated session"] }, failure_message: "Verification failed. Please review your selections and try again.", success_first: false },
     ];
     res.json(fallbacks[failCount % fallbacks.length]);
   }
@@ -319,6 +147,6 @@ app.post("/api/popup", async (req, res) => {
 app.listen(PORT, () => {
   console.log(`Verification system running on port ${PORT}`);
   if (!process.env.HAIKU_API_KEY) {
-    console.warn("⚠️  WARNING: HAIKU_API_KEY is not set! All popups will use fallbacks.");
+    console.warn("WARNING: HAIKU_API_KEY is not set!");
   }
 });
