@@ -711,8 +711,15 @@ function buildContent(data) {
         <button class="popup-btn popup-btn-primary action-submit" style="margin-top:8px;">Submit</button>
       `;
   }
-  // Fallback for any unrecognized type or malformed config
-  return `<button class="popup-btn popup-btn-primary action-submit" style="margin-top:8px;">Continue</button>`;
+  // Fallback for any unrecognized type or malformed config — render a slider instead of empty "Continue"
+  return `
+    <div class="slider-container">
+      <div class="slider-label">Drag the slider to verify</div>
+      <div class="slider-value"><span id="slider-val">50</span></div>
+      <input type="range" min="0" max="100" value="50" class="slider-track" id="slider-input">
+    </div>
+    <button class="popup-btn popup-btn-primary action-submit" style="margin-top:8px;">Verify</button>
+  `;
 }
 
 // ========== BIND INTERACTIONS ==========
@@ -771,9 +778,15 @@ function bindInteractions(data) {
       break;
     }
 
-    default:
+    default: {
+      const slider = document.getElementById("slider-input");
+      const val = document.getElementById("slider-val");
+      if (slider && val) {
+        slider.addEventListener("input", () => { val.textContent = slider.value; });
+      }
       document.querySelector(".action-submit")?.addEventListener("click", () => handleSubmission(data));
       break;
+    }
   }
 }
 

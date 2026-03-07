@@ -133,25 +133,93 @@ app.post("/api/popup", async (req, res) => {
       popup.body = "Please complete this step to continue.";
     }
 
-    // Normalize common Haiku field name mistakes
+    // Normalize common Haiku field name variations
     const cfg = popup.dismiss_config;
-    if (popup.type === "opinion_buttons" && (!cfg.buttons || cfg.buttons.length === 0)) {
-      // Haiku sometimes uses "options" instead of "buttons"
-      if (cfg.options) { cfg.buttons = cfg.options; delete cfg.options; }
-      else {
-        popup.type = "text_input";
-        popup.dismiss_config = { question: cfg.question || "Enter your response to continue." };
+
+    // opinion_buttons: needs "buttons" array
+    if (popup.type === "opinion_buttons") {
+      if (!cfg.buttons && cfg.options) { cfg.buttons = cfg.options; }
+      if (!cfg.buttons && cfg.choices) { cfg.buttons = cfg.choices; }
+      // If still no buttons, look for ANY array in the config
+      if (!cfg.buttons || !Array.isArray(cfg.buttons) || cfg.buttons.length === 0) {
+        const arrays = Object.values(cfg).filter(v => Array.isArray(v) && v.length >= 2);
+        if (arrays.length > 0) { cfg.buttons = arrays[0]; }
       }
     }
-    if (popup.type === "checkbox_agree" && (!cfg.statements || cfg.statements.length === 0)) {
-      if (cfg.checkboxes) { cfg.statements = cfg.checkboxes; delete cfg.checkboxes; }
-      else if (cfg.options) { cfg.statements = cfg.options; delete cfg.options; }
-      else if (cfg.items) { cfg.statements = cfg.items; delete cfg.items; }
+
+    // checkbox_agree: needs "statements" array
+    if (popup.type === "checkbox_agree") {
+      if (!cfg.statements && cfg.checkboxes) { cfg.statements = cfg.checkboxes; }
+      if (!cfg.statements && cfg.options) { cfg.statements = cfg.options; }
+      if (!cfg.statements && cfg.items) { cfg.statements = cfg.items; }
+      if (!cfg.statements || !Array.isArray(cfg.statements) || cfg.statements.length === 0) {
+        const arrays = Object.values(cfg).filter(v => Array.isArray(v) && v.length >= 2);
+        if (arrays.length > 0) { cfg.statements = arrays[0]; }
+      }
     }
-    if (popup.type === "captcha_select" && (!cfg.grid_items || cfg.grid_items.length === 0)) {
-      if (cfg.items) { cfg.grid_items = cfg.items; delete cfg.items; }
-      else if (cfg.emojis) { cfg.grid_items = cfg.emojis; delete cfg.emojis; }
-      else if (cfg.grid) { cfg.grid_items = cfg.grid; delete cfg.grid; }
+
+    // captcha_select: needs "grid_items" array
+    if (popup.type === "captcha_select") {
+      if (!cfg.grid_items && cfg.items) { cfg.grid_items = cfg.items; }
+      if (!cfg.grid_items && cfg.emojis) { cfg.grid_items = cfg.emojis; }
+      if (!cfg.grid_items && cfg.grid) { cfg.grid_items = cfg.grid; }
+      if (!cfg.grid_items || !Array.isArray(cfg.grid_items) || cfg.grid_items.length === 0) {
+        const arrays = Object.values(cfg).filter(v => Array.isArray(v) && v.length >= 2);
+        if (arrays.length > 0) { cfg.grid_items = arrays[0]; }
+      }
+    }
+
+    // captcha_type: needs "phrase" string
+    if (popup.type === "captcha_type") {
+      if (!cfg.phrase && cfg.text) { cfg.phrase = cfg.text; }
+      if (!cfg.phrase && cfg.captcha) { cfg.phrase = cfg.captcha; }
+    }
+
+    // captcha_math: needs "question" string
+    if (popup.type === "captcha_math") {
+      if (!cfg.question && cfg.problem) { cfg.question = cfg.problem; }
+      if (!cfg.question && cfg.prompt) { cfg.question = cfg.prompt; }
+    }
+
+    // text_input: needs "question" string
+    if (popup.type === "text_input") {
+      if (!cfg.question && cfg.prompt) { cfg.question = cfg.prompt; }
+      if (!cfg.question && cfg.label) { cfg.question = cfg.label; }
+    }
+
+    // confidence_scale: needs "statement" string
+    if (popup.type === "confidence_scale") {
+      if (!cfg.statement && cfg.question) { cfg.statement = cfg.question; }
+      if (!cfg.statement && cfg.prompt) { cfg.statement = cfg.prompt; }
+      if (!cfg.statement && cfg.label) { cfg.statement = cfg.label; }
+    }
+
+    // FINAL CHECK: if the config is STILL broken after normalization, swap to a working type
+    // This ensures the client NEVER gets an empty popup
+    const isConfigValid = (
+      (popup.type === "opinion_buttons" && Array.isArray(cfg.buttons) && cfg.buttons.length >= 2) ||
+      (popup.type === "checkbox_agree" && Array.isArray(cfg.statements) && cfg.statements.length >= 2) ||
+      (popup.type === "captcha_type" && cfg.phrase) ||
+      (popup.type === "captcha_math" && cfg.question) ||
+      (popup.type === "captcha_select" && Array.isArray(cfg.grid_items) && cfg.grid_items.length >= 4) ||
+      (popup.type === "text_input" && cfg.question) ||
+      (popup.type === "confidence_scale" && cfg.statement) ||
+      (popup.type === "slider_verify") ||
+      (popup.type === "timer")
+    );
+
+    if (!isConfigValid) {
+      console.log("Invalid config for type", popup.type, "- substituting working question. Config was:", JSON.stringify(cfg));
+      // Try to salvage: if there's a question/string anywhere in the config, use text_input
+      const anyString = Object.values(cfg).find(v => typeof v === "string" && v.length > 5);
+      if (anyString) {
+        popup.type = "text_input";
+        popup.dismiss_config = { question: anyString };
+      } else {
+        // Last resort: use a slider which needs no config
+        popup.type = "slider_verify";
+        popup.dismiss_config = { label: "Drag the slider to verify", unit: "" };
+      }
     }
 
     res.json(popup);
